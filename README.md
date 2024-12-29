@@ -1,1 +1,2 @@
-# statkitcpp
+# Statistical-kit++
+## Description
