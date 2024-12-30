@@ -1,0 +1,93 @@
+[build-system]
+requires = ["scikit-build-core>=0.18", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "statkitcpp"
+version = "0.0.1"
+description="A C++ statistical library with Python integration"
+readme="README.md"
+authors = [
+    {name = "Grigory", email="redstray1@gmail.com"}
+]
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+    "License :: OSI Approved :: GNU GPL v3"
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
+minimum-version = "build-system.requires"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+xfail-strict = true
+log_cli_level = "INFO"
+python_files = "test_*.py"
+filterwarnings = [
+    "error",
+    "ignore:pytest.PytestCacheWarning",
+]
+testpaths = ["tests"]
+
+
+[tool.mypy]
+no_incremental = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_any_generics = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+allow_untyped_decorators = true
+enable_incomplete_feature = "NewGenericSyntax"
+exclude = [
+    "tests/"
+]
+
+
+[tool.ruff]
+target-version = "py311"
+select = ["E", "F"]
+ignore = []
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+
+    "tests",
+    ".tmp"
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+line-length = 120
