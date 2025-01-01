@@ -3,3 +3,5 @@ dist/
 .vscode/
 .cache/
 statkitcpp/__pycache__
+howtocompile.md
+build_package.sh

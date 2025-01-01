@@ -1,3 +1,8 @@
 import statkitcpp as m
 
-print(m.DataType.Float8 == m.DataType.Float16)
+a = m.Tensor(shape=[2, 2])
+print(a.requires_grad)
+a.requires_grad = False
+print(a.requires_grad)
+print(a.shape)
+print(a.size)
