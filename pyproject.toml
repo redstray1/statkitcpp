@@ -1,10 +1,10 @@
 [build-system]
-requires = ["scikit-build-core>=0.18", "pybind11"]
+requires = ["scikit-build-core>=0.10", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "statkitcpp"
-version = "0.0.1"
+version = "0.0.2"
 description="A C++ statistical library with Python integration"
 readme="README.md"
 authors = [

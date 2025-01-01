@@ -1,3 +1,3 @@
-from setuptools import setup
+from skbuild import setup
 
 setup()

@@ -1,1 +1,5 @@
 build/
+dist/
+.vscode/
+.cache/
+statkitcpp/__pycache__
