@@ -30,14 +30,14 @@ public:
     std::unique_ptr<Tensor> grad;
 
     Tensor();
-    explicit Tensor(const std::vector<uint32_t>& shape, data_type dtype = data_type::Float32);
+    explicit Tensor(const std::vector<uint32_t>& shape);
     Tensor(const Tensor& other) = default;
     Tensor(Tensor&& other) = default;
     ~Tensor() {}
 
-    static Tensor<T> Full(const std::vector<uint32_t>& shape, T value, data_type dtype = data_type::Float32);
-    static Tensor<T> Zeros(const std::vector<uint32_t>& shape, data_type dtype = data_type::Float32);
-    static Tensor<T> Ones(const std::vector<uint32_t>& shape, data_type dtype = data_type::Float32);
+    static Tensor<T> Full(const std::vector<uint32_t>& shape, T value);
+    static Tensor<T> Zeros(const std::vector<uint32_t>& shape);
+    static Tensor<T> Ones(const std::vector<uint32_t>& shape);
 
     Tensor<T>& operator=(const Tensor& other) = default;
     Tensor<T>& operator=(Tensor&& other) = default;
@@ -47,11 +47,12 @@ public:
 
     std::vector<uint32_t> GetShape() const;
     void SetShape(const std::vector<uint32_t>& shape);
-
     uint32_t GetSize() const;
     
     void SetRequiresGrad(bool requires_grad);
     bool GetRequiresGrad() const;
+
+    std::vector<T> GetData() { return data_; }
 
     // Tensor<T>& operator+=(const Tensor<T>& rhs);
     // Tensor<T> operator+(const Tensor<T>& rhs);

@@ -18,9 +18,9 @@ Tensor<T>::Tensor() {
 }
 
 template <typename T>
-Tensor<T>::Tensor(const std::vector<uint32_t>& shape, data_type dtype) {
+Tensor<T>::Tensor(const std::vector<uint32_t>& shape) {
     shape_ = shape;
-    dtype_ = dtype;
+    // dtype_ = D;
     size_ = 1;
     for (const auto& dim : shape) {
         size_ *= dim;
@@ -166,8 +166,8 @@ bool Tensor<T>::GetRequiresGrad() const {
 // Tensor class implementation END-----------------------------------------------------
 
 template <typename T>
-Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, T value, data_type dtype) {
-    Tensor<T> tensor(shape, dtype);
+Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, T value) {
+    Tensor<T> tensor(shape);
     for (uint32_t i = 0; i < tensor.size_; i++) {
         tensor.data_[i] = value;
     }
@@ -175,16 +175,17 @@ Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, T value, data_type
 }
 
 template <typename T>
-Tensor<T> Tensor<T>::Ones(const std::vector<uint32_t>& shape, data_type dtype) {
-    return Tensor<T>::Full(shape, 1, dtype);
+Tensor<T> Tensor<T>::Ones(const std::vector<uint32_t>& shape) {
+    return Tensor<T>::Full(shape, 1);
 }
 
 template <typename T>
-Tensor<T> Tensor<T>::Zeros(const std::vector<uint32_t>& shape, data_type dtype) {
-    return Tensor<T>::Full(shape, 1, dtype);
+Tensor<T> Tensor<T>::Zeros(const std::vector<uint32_t>& shape) {
+    return Tensor<T>::Full(shape, 1);
 }
 
 template class Tensor<float>;
+template class Tensor<double>;
 
 bool IsBroadcastable(const std::vector<uint32_t>& shape1,
                      const std::vector<uint32_t>& shape2) {

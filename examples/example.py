@@ -1,6 +1,6 @@
 import statkitcpp as skpp
 
-a = skpp.Tensor(shape=[2, 2])
+a = skpp.Tensor(shape=[2, 2], dtype=skpp.DataType.Float32)
 print(a.requires_grad)
 a.requires_grad = False
 print(a.requires_grad)
@@ -11,3 +11,5 @@ b = a
 print(b)
 print(a.shape, b.shape)
 print(a.broadcastable_to(b))
+
+c = skpp.Tensor64(shape=[2, 2])

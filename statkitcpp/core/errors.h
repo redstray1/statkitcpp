@@ -1,5 +1,5 @@
-#ifndef ERRORSH
-#define ERRORSH
+#ifndef ERRORS_HEADER_H
+#define ERRORS_HEADER_H
 #include <cstdint>
 #include <stdexcept>
 #include <string>
