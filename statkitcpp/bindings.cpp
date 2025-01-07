@@ -13,7 +13,7 @@ template <typename T>
 void DeclareTensorClass(py::module& module, std::string const & suffix) {
     py::class_<Tensor<T>>(module, ("Tensor" + suffix).c_str())
         .def(py::init<>())
-        .def(py::init<std::vector<uint32_t>, data_type>(), py::arg("shape"), py::arg("dtype")=data_type::Float32)
+        .def(py::init<std::vector<uint32_t>>(), py::arg("shape"))
         .def("__repr__", &Tensor<T>::ToString)
         .def_property_readonly("size", &Tensor<T>::GetSize)
         .def_property("shape", &Tensor<T>::GetShape, &Tensor<T>::SetShape)
@@ -35,8 +35,8 @@ PYBIND11_MODULE(_statkitcpp, m) {
         .value("Float64", data_type::Float64);
     DeclareTensorClass<float>(m, "32");
     DeclareTensorClass<double>(m, "64");
-    m.def("full", &Tensor<float>::Full, py::arg("shape"), py::arg("value"), py::arg("dtype") = data_type::Float32);
-    m.def("zeros", &Tensor<float>::Zeros, py::arg("shape"), py::arg("dtype") = data_type::Float32);
-    m.def("ones", &Tensor<float>::Ones, py::arg("shape"), py::arg("dtype") = data_type::Float32);
+    // m.def("full", &Tensor<float>::Full, py::arg("shape"), py::arg("value"), py::arg("dtype") = data_type::Float32);
+    // m.def("zeros", &Tensor<float>::Zeros, py::arg("shape"), py::arg("dtype") = data_type::Float32);
+    // m.def("ones", &Tensor<float>::Ones, py::arg("shape"), py::arg("dtype") = data_type::Float32);
 }
 };

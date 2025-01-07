@@ -17,7 +17,7 @@ private:
     data_type dtype_ = data_type::Float32;
     std::vector<T> data_;
     uint32_t size_;
-    bool requires_grad_;
+    bool requires_grad_ = true;
 
     uint32_t GetFlatIndex(const std::vector<uint32_t>& indexes) const;
     std::vector<uint32_t> GetIndexesFromFlat(uint32_t flat_index) const;

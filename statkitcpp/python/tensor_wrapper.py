@@ -7,6 +7,7 @@ __all__ = []
 
 class Tensor(metaclass=TemplateMeta):
     pass
+
 Tensor.register(DataType.Float32, Tensor32)
 Tensor.register(DataType.Float64, Tensor64)
 
