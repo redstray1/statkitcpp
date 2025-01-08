@@ -25,6 +25,7 @@ private:
     static Tensor<T> ApplyBroadcastOp(const Tensor& lhs, const Tensor& rhs,
                                BinaryOperation op);
     std::string ShapeToString() const;
+    std::string RecursiveToString(uint32_t depth, std::string& result) const;
 
 public:
     std::unique_ptr<Tensor> grad;
@@ -47,12 +48,17 @@ public:
 
     std::vector<uint32_t> GetShape() const;
     void SetShape(const std::vector<uint32_t>& shape);
+
     uint32_t GetSize() const;
     
+    uint32_t GetNDim() const;
+
     void SetRequiresGrad(bool requires_grad);
     bool GetRequiresGrad() const;
 
     std::vector<T> GetData() { return data_; }
+    uint32_t GetItemSize() { return sizeof(T); }
+    uint32_t GetNBytes() { return GetSize() * GetItemSize(); }
 
     // Tensor<T>& operator+=(const Tensor<T>& rhs);
     // Tensor<T> operator+(const Tensor<T>& rhs);

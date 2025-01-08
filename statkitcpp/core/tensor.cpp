@@ -1,6 +1,5 @@
 #include "tensor.h"
 #include "errors.h"
-#include "config.h"
 #include <algorithm>
 #include <cstdint>
 #include <cassert>
@@ -140,6 +139,11 @@ void Tensor<T>::SetShape(const std::vector<uint32_t>& shape) {
 template <typename T>
 uint32_t Tensor<T>::GetSize() const {
     return size_;
+}
+
+template <typename T>
+uint32_t Tensor<T>::GetNDim() const {
+    return shape_.size();
 }
 
 template <typename T>
