@@ -1,20 +1,23 @@
 #ifndef TENSOR_HEADER_H
 #define TENSOR_HEADER_H
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 #include <math.h>
 #include <sys/types.h>
 #include <memory>
-#include "config.h"
 #include <string>
+#include "variable.h"
 
 namespace statkitcpp {
 
+bool IsBroadcastable(const std::vector<uint32_t>& shape1,
+                     const std::vector<uint32_t>& shape2);
+
 template <class T = float>
-class Tensor {
+class Tensor : public Variable {
 private:
     std::vector<uint32_t> shape_;
-    data_type dtype_ = data_type::Float32;
     std::vector<T> data_;
     uint32_t size_;
     bool requires_grad_ = true;
@@ -31,9 +34,9 @@ public:
     std::unique_ptr<Tensor> grad;
 
     Tensor();
-    explicit Tensor(const std::vector<uint32_t>& shape);
-    Tensor(const Tensor& other) = default;
-    Tensor(Tensor&& other) = default;
+    explicit Tensor(const std::vector<uint32_t>& shape, bool requires_grad = true);
+    Tensor(const Tensor& other);
+    Tensor(Tensor&& other);
     ~Tensor() {}
 
     static Tensor<T> Full(const std::vector<uint32_t>& shape, T value);
@@ -43,22 +46,31 @@ public:
     Tensor<T>& operator=(const Tensor& other) = default;
     Tensor<T>& operator=(Tensor&& other) = default;
 
-    std::string ToString() const;
+    template <typename U, typename = typename std::enable_if<std::is_convertible<T, U>::value>::type>
+    operator Tensor<U>() {
+        Tensor<U> output(shape_, requires_grad_);
+        for (size_t i = 0; i < size_; i++) {
+            output.GetData()[i] = static_cast<U>(data_[i]);
+        }
+        return output;
+    }
+
+    std::string ToString() const override;
     bool BroadcastableTo(const Tensor& other);
 
-    std::vector<uint32_t> GetShape() const;
-    void SetShape(const std::vector<uint32_t>& shape);
+    std::vector<uint32_t> GetShape() const override;
+    void SetShape(const std::vector<uint32_t>& shape) override;
 
-    uint32_t GetSize() const;
+    uint32_t GetSize() const override;
     
-    uint32_t GetNDim() const;
+    uint32_t GetNDim() const override;
 
-    void SetRequiresGrad(bool requires_grad);
-    bool GetRequiresGrad() const;
+    void SetRequiresGrad(bool requires_grad) override;
+    bool GetRequiresGrad() const override;
 
-    std::vector<T> GetData() { return data_; }
-    uint32_t GetItemSize() { return sizeof(T); }
-    uint32_t GetNBytes() { return GetSize() * GetItemSize(); }
+    std::vector<T>& GetData() { return data_; }
+    uint32_t GetItemSize() const override { return sizeof(T); }
+    uint32_t GetNBytes() const override { return GetSize() * GetItemSize(); }
 
     // Tensor<T>& operator+=(const Tensor<T>& rhs);
     // Tensor<T> operator+(const Tensor<T>& rhs);

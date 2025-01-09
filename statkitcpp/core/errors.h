@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+class InvalidDatatypeError : public std::runtime_error {
+public:
+    explicit InvalidDatatypeError()
+        : std::runtime_error{"Unsupported dtype. Supported: float32, float64"} {
+    }
+};
 class BroadcastError : public std::invalid_argument {
 public:
     explicit BroadcastError(const std::string& shape1, const std::string& shape2)

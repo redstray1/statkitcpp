@@ -1,8 +1,8 @@
 import statkitcpp as skpp
 import sys
 
-a = skpp.Tensor(shape=[2, 2], dtype=skpp.Float32)
-print(a.requires_grad)
+a = skpp.Tensor(shape=[2, 2], dtype='float32')
+print(a.requires_grad, a.__class__)
 a.requires_grad = False
 print(a.requires_grad)
 print(a.shape)
@@ -17,5 +17,6 @@ print(b.requires_grad)
 b.requires_grad = True
 print(b.requires_grad)
 print(sys.getsizeof(b), b.nbytes, b.itemsize)
-c = skpp.full([10, 10, 10], 2, dtype=skpp.Float64)
-print(sys.getsizeof(c), c.nbytes, c.itemsize)
+c = skpp.full(shape=[10, 10, 10], value=2, dtype='float64')
+print(sys.getsizeof(c), c.nbytes, c.itemsize, c)
+print(a.broadcastable_to(c))

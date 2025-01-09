@@ -1,13 +1,13 @@
 #include "tensor.h"
-#include "errors.h"
+#include "../errors.h"
 #include <algorithm>
 #include <cstdint>
 #include <cassert>
 #include <sys/types.h>
 
 namespace statkitcpp {
-bool IsBroadcastable(const std::vector<uint32_t>& shape1,
-                     const std::vector<uint32_t>& shape2);
+// bool IsBroadcastable(const std::vector<uint32_t>& shape1,
+//                      const std::vector<uint32_t>& shape2);
 // Tensor class implementation START-----------------------------------------------------
 // Constructors START------------------------------------------------------------
 template <typename  T>
@@ -17,16 +17,39 @@ Tensor<T>::Tensor() {
 }
 
 template <typename T>
-Tensor<T>::Tensor(const std::vector<uint32_t>& shape) {
+Tensor<T>::Tensor(const std::vector<uint32_t>& shape, bool requires_grad) {
     shape_ = shape;
-    // dtype_ = D;
+    requires_grad_ = requires_grad;
     size_ = 1;
     for (const auto& dim : shape) {
         size_ *= dim;
     }
     data_.resize(size_);
 }
+
+template <typename T>
+Tensor<T>::Tensor(const Tensor<T>& other) {
+    shape_ = other.shape_;
+    data_ = other.data_;
+    size_ = other.size_;
+    requires_grad_ = other.requires_grad_;
+}
+
+template <typename T>
+Tensor<T>::Tensor(Tensor<T>&& other) {
+    shape_ = std::move(other.shape_);
+    data_ = std::move(other.data_);
+    size_ = std::move(other.size_);
+    requires_grad_ = std::move(other.requires_grad_);
+}
+
 // Constructors END------------------------------------------------------------
+
+// template<typename T>
+// template <typename U, typename = typename std::enable_if<std::is_convertible<T, U>::value>::type>
+// operator Tensor<T>::Tensor<U>() {
+
+// }
 
 template <typename T>
 uint32_t Tensor<T>::GetFlatIndex(const std::vector<uint32_t>& indexes) const {
@@ -115,14 +138,14 @@ std::string Tensor<T>::ShapeToString() const {
 }
 
 template <typename T>
-bool Tensor<T>::BroadcastableTo(const Tensor<T>& other) {
+bool Tensor<T>::BroadcastableTo(const Tensor& other) {
     return IsBroadcastable(shape_, other.shape_);
 }
 
 template <typename T>
 std::string Tensor<T>::ToString() const {
     std::string shape_repr = ShapeToString();
-    std::string result = "Tensor(shape=" + shape_repr + ")";
+    std::string result = "Tensor(shape=" + shape_repr + ", dtype=" + typeid(T).name() + ")";
     return result;
 }
 
