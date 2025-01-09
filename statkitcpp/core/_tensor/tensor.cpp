@@ -194,10 +194,13 @@ bool Tensor<T>::GetRequiresGrad() const {
 
 template <typename T>
 Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, T value) {
-    Tensor<T> tensor(shape);
-    for (uint32_t i = 0; i < tensor.size_; i++) {
-        tensor.data_[i] = value;
+    Tensor<T> tensor;
+    tensor.shape_ = shape;
+    tensor.size_ = 1;
+    for (const auto& dim : shape) {
+        tensor.size_ *= dim;
     }
+    tensor.data_.resize(tensor.size_, value);
     return tensor;
 }
 
@@ -208,7 +211,7 @@ Tensor<T> Tensor<T>::Ones(const std::vector<uint32_t>& shape) {
 
 template <typename T>
 Tensor<T> Tensor<T>::Zeros(const std::vector<uint32_t>& shape) {
-    return Tensor<T>::Full(shape, 1);
+    return Tensor<T>::Full(shape, 0);
 }
 
 template class Tensor<float>;
