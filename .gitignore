@@ -5,3 +5,4 @@ dist/
 statkitcpp/__pycache__
 howtocompile.md
 build_package.sh
+stubs/

@@ -22,13 +22,14 @@ private:
     uint32_t size_;
     bool requires_grad_ = true;
 
+    std::string GetTypeName() const;
     uint32_t GetFlatIndex(const std::vector<uint32_t>& indexes) const;
     std::vector<uint32_t> GetIndexesFromFlat(uint32_t flat_index) const;
     template <class BinaryOperation>
     static Tensor<T> ApplyBroadcastOp(const Tensor& lhs, const Tensor& rhs,
                                BinaryOperation op);
     std::string ShapeToString() const;
-    std::string RecursiveToString(uint32_t depth, std::string& result) const;
+    void RecursiveToString(uint32_t depth, uint32_t& cur_index, std::string& result) const;
 
 public:
     std::unique_ptr<Tensor> grad;

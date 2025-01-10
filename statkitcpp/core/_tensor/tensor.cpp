@@ -1,5 +1,6 @@
 #include "tensor.h"
 #include "../errors.h"
+#include "../utils/utils.h"
 #include <algorithm>
 #include <cstdint>
 #include <cassert>
@@ -50,6 +51,18 @@ Tensor<T>::Tensor(Tensor<T>&& other) {
 // operator Tensor<T>::Tensor<U>() {
 
 // }
+
+template <typename T>
+std::string Tensor<T>::GetTypeName() const {
+    std::string typeid_name = typeid(T).name();
+    if (typeid_name == "f") {
+        return "float32";
+    } else if (typeid_name == "d") {
+        return "float64";
+    } else {
+        throw InvalidDatatypeError{};
+    }
+}
 
 template <typename T>
 uint32_t Tensor<T>::GetFlatIndex(const std::vector<uint32_t>& indexes) const {
@@ -124,6 +137,37 @@ Tensor<T> Tensor<T>::ApplyBroadcastOp(const Tensor<T>& lhs, const Tensor<T>& rhs
 }
 
 template <typename T>
+void Tensor<T>::RecursiveToString(uint32_t depth, uint32_t& cur_index, std::string& result) const {
+    result += '[';
+    if (depth == shape_.size() - 1) {
+        for (int i = 0; i < shape_[depth]; i++) {
+            result += FloatRepr(data_[cur_index]);
+            if (i < shape_[depth] - 1) {
+                result += ", ";
+            }
+            cur_index++;
+        }
+        result += ']';
+        return;
+    }
+    std::string newline;
+    for (int i = 0; i < shape_.size() - depth - 1; i++) {
+        newline += '\n';
+    }
+    std::string shift = "        ";
+    for (int i = 0; i < depth; i++) {
+        shift += ' ';
+    }
+    for (int i = 0; i < shape_[depth]; i++) {
+        RecursiveToString(depth + 1, cur_index, result);
+        if (i < shape_[depth] - 1) {
+            result += "," + newline + shift;
+        }
+    }
+    result += ']';
+}
+
+template <typename T>
 std::string Tensor<T>::ShapeToString() const {
     std::string shape_repr = "(";
     for (uint32_t i = 0; i < shape_.size(); i++) {
@@ -145,7 +189,11 @@ bool Tensor<T>::BroadcastableTo(const Tensor& other) {
 template <typename T>
 std::string Tensor<T>::ToString() const {
     std::string shape_repr = ShapeToString();
-    std::string result = "Tensor(shape=" + shape_repr + ", dtype=" + typeid(T).name() + ")";
+    std::string tensor_repr;
+    std::string dtype_repr = GetTypeName();
+    uint32_t index = 0;
+    RecursiveToString(0, index, tensor_repr);
+    std::string result = "Tensor(" + tensor_repr + ", shape=" + shape_repr + ", dtype=" + dtype_repr + ")";
     return result;
 }
 

@@ -64,8 +64,5 @@ PYBIND11_MODULE(_statkitcpp, m) {
     // DeclareTensorClass<float>(m, "32");
     // DeclareTensorClass<double>(m, "64");
     DeclareTensorDispatcher(m);
-    // m.def("full", &Tensor<float>::Full, py::arg("shape"), py::arg("value"), py::arg("dtype") = data_type::Float32);
-    // m.def("zeros", &Tensor<float>::Zeros, py::arg("shape"), py::arg("dtype") = data_type::Float32);
-    // m.def("ones", &Tensor<float>::Ones, py::arg("shape"), py::arg("dtype") = data_type::Float32);
 }
 };
