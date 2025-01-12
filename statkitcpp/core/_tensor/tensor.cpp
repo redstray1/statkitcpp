@@ -7,6 +7,7 @@
 #include <cassert>
 #include <sys/types.h>
 #include <functional>
+#include <initializer_list>
 #include <numeric>
 
 namespace statkitcpp {
@@ -32,6 +33,33 @@ Tensor<T>::Tensor(const std::vector<uint32_t>& shape, bool requires_grad) {
         strides_[i] = strides_[i + 1] * shape[i + 1];
     }
     data_.resize(size_);
+}
+
+template <typename T>
+Tensor<T>::Tensor(T* data, 
+                  const std::vector<uint32_t>& shape,
+                  bool requires_grad) {
+    size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    shape_ = shape;
+    strides_.resize(shape.size(), sizeof(T));
+    for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
+        strides_[i] = strides_[i + 1] * shape[i + 1];
+    }
+    requires_grad_ = requires_grad;
+    data_.assign(data, data + size_);
+}
+
+template <typename T>
+Tensor<T>::Tensor(std::initializer_list<T> data,
+                  const std::vector<uint32_t>& shape,
+                  bool requires_grad) : data_(data) {
+    size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    shape_ = shape;
+    strides_.resize(shape.size(), sizeof(T));
+    for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
+        strides_[i] = strides_[i + 1] * shape[i + 1];
+    }
+    requires_grad_ = requires_grad;
 }
 
 template <typename T>

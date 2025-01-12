@@ -2,7 +2,9 @@
 #define TENSOR_BINDING_HEADER_H
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include "../_tensor/tensor.h"
 #include "../_tensor/shape.h"
@@ -21,7 +23,9 @@ public:
     TensorDispatcher(const std::vector<uint32_t>& shape, py::str dtype, bool requires_grad = true);
     TensorDispatcher(const TensorDispatcher& other) = default;
     TensorDispatcher(TensorDispatcher&& other) = default;
-    TensorDispatcher(std::shared_ptr<Variable> tensor) : tensor_(std::move(tensor)) {}
+    TensorDispatcher(std::shared_ptr<Variable> tensor, const std::string& dtype = "float32")
+        : tensor_(std::move(tensor)), dtype_(dtype) {}
+    TensorDispatcher(py::buffer b);
     ~TensorDispatcher() {}
 
     TensorDispatcher& operator=(const TensorDispatcher& other) = default;
@@ -43,7 +47,9 @@ public:
     void SetRequiresGrad(bool requires_grad);
     bool GetRequiresGrad() const;
 
-    //auto GetData();
+
+    auto GetDataType() const;
+    void* GetDataPointer();
     std::string GetDType() const;
     uint32_t GetItemSize() const;
     uint32_t GetNBytes() const;
@@ -57,12 +63,29 @@ TensorDispatcher::TensorDispatcher() {
 TensorDispatcher::TensorDispatcher(const std::vector<uint32_t>& shape, py::str dtype, bool requires_grad) {
     std::string dtype_str = static_cast<std::string>(dtype);
     if (dtype_str == "float32") {
-        //tensor_ = new Tensor<float>(shape, requires_grad);
         tensor_ = std::make_shared<Tensor<float>>(shape, requires_grad);
-        dtype_ = dtype;
+        dtype_ = dtype_str;
     } else if (dtype_str == "float64") {
         tensor_ = std::make_shared<Tensor<double>>(shape, requires_grad);
-        dtype_ = dtype;
+        dtype_ = dtype_str;
+    } else {
+        throw InvalidDatatypeError{};
+    }
+}
+
+TensorDispatcher::TensorDispatcher(py::buffer b) {
+    py::buffer_info info = b.request();
+    std::vector<uint32_t> shape;
+    std::transform(info.shape.begin(), info.shape.end(), std::back_inserter(shape), [](const int value)
+    {
+        return static_cast<uint32_t>(value);
+    });
+    if (info.item_type_is_equivalent_to<float>()) {
+        tensor_ = std::make_shared<Tensor<float>>(static_cast<float*>(info.ptr), shape);
+        dtype_ = "float32";
+    } else if (info.item_type_is_equivalent_to<double>())  {
+        tensor_ = std::make_shared<Tensor<double>>(static_cast<double*>(info.ptr), shape);
+        dtype_ = "float64";
     } else {
         throw InvalidDatatypeError{};
     }
@@ -106,6 +129,10 @@ void TensorDispatcher::SetRequiresGrad(bool requires_grad) {
 
 bool TensorDispatcher::GetRequiresGrad() const {
     return tensor_->GetRequiresGrad();
+}
+
+void* TensorDispatcher::GetDataPointer() {
+    return tensor_->GetDataPointer();
 }
 
 std::string TensorDispatcher::GetDType() const {

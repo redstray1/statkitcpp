@@ -21,6 +21,7 @@ public:
     virtual void SetRequiresGrad(bool requires_grad) = 0;
     virtual bool GetRequiresGrad() const = 0;
 
+    virtual void* GetDataPointer() = 0;
     virtual uint32_t GetItemSize() const = 0;
     virtual uint32_t GetNBytes() const = 0;
 };

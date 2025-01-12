@@ -1,6 +1,7 @@
 #ifndef TENSOR_HEADER_H
 #define TENSOR_HEADER_H
 #include <cstdint>
+#include <initializer_list>
 #include <type_traits>
 #include <vector>
 #include <math.h>
@@ -31,7 +32,13 @@ public:
     std::shared_ptr<GradFunction> grad_fn;
 
     Tensor();
-    explicit Tensor(const std::vector<uint32_t>& shape, bool requires_grad = true);
+    explicit Tensor(const std::vector<uint32_t>& shape, bool requires_grad = false);
+    explicit Tensor(T* data, 
+                    const std::vector<uint32_t>& shape,
+                    bool requires_grad = false);
+    explicit Tensor(std::initializer_list<T> data,
+                    const std::vector<uint32_t>& shape,
+                    bool requires_grad = false);
     Tensor(const Tensor& other);
     Tensor(Tensor&& other);
     ~Tensor() {}
@@ -68,7 +75,7 @@ public:
     void SetRequiresGrad(bool requires_grad) override;
     bool GetRequiresGrad() const override;
 
-    std::vector<T>& GetData() { return data_; }
+    void* GetDataPointer() override { return data_.data(); }
     uint32_t GetItemSize() const override { return sizeof(T); }
     uint32_t GetNBytes() const override { return GetSize() * GetItemSize(); }
 

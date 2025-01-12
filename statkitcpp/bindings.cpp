@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 #include <cstdint>
 #include "core/datatypes.h"
+#include "core/errors.h"
 #include "core/_tensor/tensor.h"
 #include "core/dispatcher/tensor_dispatcher.h"
 #include "core/dispatcher/creation_operations.h"
@@ -31,7 +32,7 @@ void DeclareTensorClass(py::module& module, std::string const & suffix) {
 }
 
 void DeclareTensorDispatcher(py::module& module) {
-    py::class_<TensorDispatcher> cls(module, "Tensor");
+    py::class_<TensorDispatcher> cls(module, "Tensor", py::buffer_protocol());
     cls.def(py::init<>());
     cls.def(py::init<std::vector<uint32_t>, py::str, bool>(), py::kw_only(), py::arg("shape"), py::arg("dtype") = "float32", py::arg("requires_grad") = true);
     cls.def("__repr__", &TensorDispatcher::ToString);
@@ -45,6 +46,31 @@ void DeclareTensorDispatcher(py::module& module) {
     cls.def("reshape", &TensorDispatcher::Reshape, py::arg("new_shape"));
     cls.def_property("requires_grad", &TensorDispatcher::GetRequiresGrad, &TensorDispatcher::SetRequiresGrad);
     cls.def("broadcastable_to", &TensorDispatcher::BroadcastableTo, py::arg("other"));
+
+    cls.def_buffer([](TensorDispatcher& td) -> py::buffer_info {
+        if (td.GetDType() == "float32") {
+            return py::buffer_info(
+            td.GetDataPointer(),
+            td.GetItemSize(),
+            py::format_descriptor<float>::format(),
+            td.GetNDim(),
+            td.GetShape(),
+            td.GetStrides()
+        );
+        } else {
+            return py::buffer_info(
+            td.GetDataPointer(),
+            td.GetItemSize(),
+            py::format_descriptor<double>::format(),
+            td.GetNDim(),
+            td.GetShape(),
+            td.GetStrides()
+        );
+        }
+        
+    });
+
+    cls.def(py::init<py::buffer>());
 
     module.def("full", &Full, py::kw_only(), py::arg("shape"), py::arg("value"), py::arg("dtype") = "float32");
     module.def("zeros", &Zeros, py::kw_only(), py::arg("shape"), py::arg("dtype") = "float32");
