@@ -39,10 +39,12 @@ std::vector<uint32_t> BroadcastShapes(const std::vector<uint32_t>& shape1,
         throw BroadcastError{ShapeToString(shape1), ShapeToString(shape2)};
     }
     std::vector<uint32_t> output_shape(std::max(shape1.size(), shape2.size()));
-    for (int i = std::max(shape1.size(), shape2.size()) - 1; i >= 0; i--) {
-        uint32_t lhs_dim = i < static_cast<int>(shape1.size()) ? shape1[i] : 1;
-        uint32_t rhs_dim = i < static_cast<int>(shape2.size()) ? shape2[i] : 1;
-        output_shape[i] = std::max(lhs_dim, rhs_dim);
+    for (int i = 0; i < std::max(shape1.size(), shape2.size()); i++) {
+        int index1 = static_cast<int>(shape1.size()) - i - 1;
+        int index2 = static_cast<int>(shape2.size()) - i - 1;
+        uint32_t dim1 = CheckIndex(index1, shape1.size()) ? shape1[index1] : 1;
+        uint32_t dim2 = CheckIndex(index2, shape2.size()) ? shape2[index2] : 1;
+        output_shape[output_shape.size() - i - 1] = std::max(dim1, dim2);
     }
     return output_shape;
 }

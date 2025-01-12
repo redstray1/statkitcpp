@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <cassert>
 #include <sys/types.h>
+#include <functional>
+#include <numeric>
 
 namespace statkitcpp {
 // bool IsBroadcastable(const std::vector<uint32_t>& shape1,
@@ -22,10 +24,7 @@ template <typename T>
 Tensor<T>::Tensor(const std::vector<uint32_t>& shape, bool requires_grad) {
     shape_ = shape;
     requires_grad_ = requires_grad;
-    size_ = 1;
-    for (const auto& dim : shape) {
-        size_ *= dim;
-    }
+    size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     data_.resize(size_);
 }
 
