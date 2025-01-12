@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include "../_tensor/tensor.h"
+#include "../_tensor/shape.h"
 #include "../errors.h"
 
 namespace py = pybind11;

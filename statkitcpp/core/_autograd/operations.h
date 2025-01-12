@@ -1,4 +1,3 @@
-#include <vector>
 #include <memory>
 #include "../_tensor/tensor.h"
 #include "../_tensor/variable.h"
