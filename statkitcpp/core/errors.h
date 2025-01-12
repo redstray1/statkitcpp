@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+class SliceError : public std::invalid_argument {
+public:
+    explicit SliceError(const std::string& reason)
+        : std::invalid_argument{"Wrong slice argument: " + reason} {
+    }
+};
 class InvalidDatatypeError : public std::runtime_error {
 public:
     explicit InvalidDatatypeError()
