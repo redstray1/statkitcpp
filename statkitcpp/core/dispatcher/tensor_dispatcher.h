@@ -34,6 +34,8 @@ public:
     void SetShape(const std::vector<uint32_t>& shape);
     void Reshape(const std::vector<uint32_t>& new_shape);
 
+    std::vector<uint32_t> GetStrides() const;
+
     uint32_t GetSize() const;
     
     uint32_t GetNDim() const;
@@ -85,6 +87,10 @@ void TensorDispatcher::SetShape(const std::vector<uint32_t>& new_shape) {
 void TensorDispatcher::Reshape(const std::vector<uint32_t>& new_shape) {
     tensor_->Reshape(new_shape);
 } 
+
+std::vector<uint32_t> TensorDispatcher::GetStrides() const {
+    return tensor_->GetStrides();
+}
 
 uint32_t TensorDispatcher::GetSize() const {
     return tensor_->GetSize();

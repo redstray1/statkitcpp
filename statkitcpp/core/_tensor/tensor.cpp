@@ -17,6 +17,8 @@ namespace statkitcpp {
 template <typename  T>
 Tensor<T>::Tensor() {
     shape_ = {0};
+    strides_ = {0};
+    size_ = 0;
     data_ = {};
 }
 
@@ -25,6 +27,10 @@ Tensor<T>::Tensor(const std::vector<uint32_t>& shape, bool requires_grad) {
     shape_ = shape;
     requires_grad_ = requires_grad;
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    strides_.resize(shape.size(), sizeof(T));
+    for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
+        strides_[i] = strides_[i + 1] * shape[i + 1];
+    }
     data_.resize(size_);
 }
 
@@ -33,6 +39,7 @@ Tensor<T>::Tensor(const Tensor<T>& other) {
     shape_ = other.shape_;
     data_ = other.data_;
     size_ = other.size_;
+    strides_ = other.strides_;
     requires_grad_ = other.requires_grad_;
 }
 
@@ -41,6 +48,7 @@ Tensor<T>::Tensor(Tensor<T>&& other) {
     shape_ = std::move(other.shape_);
     data_ = std::move(other.data_);
     size_ = std::move(other.size_);
+    strides_ = std::move(other.strides_);
     requires_grad_ = std::move(other.requires_grad_);
 }
 
@@ -204,6 +212,11 @@ void Tensor<T>::Reshape(const std::vector<uint32_t>& new_shape) {
 }
 
 template <typename T>
+std::vector<uint32_t> Tensor<T>::GetStrides() const {
+    return strides_;
+}
+
+template <typename T>
 uint32_t Tensor<T>::GetSize() const {
     return size_;
 }
@@ -237,13 +250,14 @@ bool Tensor<T>::GetRequiresGrad() const {
 // Tensor class implementation END-----------------------------------------------------
 
 template <typename T>
-Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, T value) {
+Tensor<T> Tensor<T>::Full(const std::vector<uint32_t>& shape, const T& value) {
     Tensor<T> tensor;
     tensor.shape_ = shape;
-    tensor.size_ = 1;
-    for (const auto& dim : shape) {
-        tensor.size_ *= dim;
+    tensor.strides_.resize(shape.size(), sizeof(T));
+    for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
+        tensor.strides_[i] = tensor.strides_[i + 1] * shape[i + 1];
     }
+    tensor.size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     tensor.data_.resize(tensor.size_, value);
     return tensor;
 }

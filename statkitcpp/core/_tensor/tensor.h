@@ -16,9 +16,10 @@ template <class T = float>
 class Tensor : public Variable {
 private:
     std::vector<uint32_t> shape_;
+    std::vector<uint32_t> strides_;
     std::vector<T> data_;
     uint32_t size_;
-    bool requires_grad_ = true;
+    bool requires_grad_ = false;
     std::string GetTypeName() const;
     uint32_t GetFlatIndex(const std::vector<uint32_t>& indexes) const;
     std::vector<uint32_t> GetIndexesFromFlat(uint32_t flat_index) const;
@@ -35,7 +36,7 @@ public:
     Tensor(Tensor&& other);
     ~Tensor() {}
 
-    static Tensor<T> Full(const std::vector<uint32_t>& shape, T value);
+    static Tensor<T> Full(const std::vector<uint32_t>& shape, const T& value);
     static Tensor<T> Zeros(const std::vector<uint32_t>& shape);
     static Tensor<T> Ones(const std::vector<uint32_t>& shape);
 
@@ -57,6 +58,8 @@ public:
     std::vector<uint32_t> GetShape() const override;
     void SetShape(const std::vector<uint32_t>& shape) override;
     void Reshape(const std::vector<uint32_t>& new_shape) override;
+
+    std::vector<uint32_t> GetStrides() const override;
 
     uint32_t GetSize() const override;
     
