@@ -9,6 +9,12 @@ public:
         : std::invalid_argument{"Wrong slice argument: " + reason} {
     }
 };
+class ReshapeError : public std::runtime_error {
+public:
+    explicit ReshapeError(const std::string& size, const std::string& shape)
+        : std::runtime_error{"Cannot reshape tensor of size " + size + " into shape " + shape} {
+    }
+};
 class InvalidDatatypeError : public std::runtime_error {
 public:
     explicit InvalidDatatypeError()

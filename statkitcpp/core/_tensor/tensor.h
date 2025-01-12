@@ -56,6 +56,7 @@ public:
 
     std::vector<uint32_t> GetShape() const override;
     void SetShape(const std::vector<uint32_t>& shape) override;
+    void Reshape(const std::vector<uint32_t>& new_shape) override;
 
     uint32_t GetSize() const override;
     

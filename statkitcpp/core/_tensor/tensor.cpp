@@ -190,7 +190,17 @@ std::vector<uint32_t> Tensor<T>::GetShape() const {
 
 template <typename T>
 void Tensor<T>::SetShape(const std::vector<uint32_t>& shape) {
+    auto new_size =
+        std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    if (new_size != size_) {
+        throw ReshapeError{std::to_string(size_), ShapeToString(shape)};
+    }
     shape_ = shape;
+}
+
+template <typename T>
+void Tensor<T>::Reshape(const std::vector<uint32_t>& new_shape) {
+    SetShape(new_shape);
 }
 
 template <typename T>
