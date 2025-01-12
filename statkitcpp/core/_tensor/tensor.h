@@ -8,11 +8,9 @@
 #include <memory>
 #include <string>
 #include "variable.h"
+#include "../_autograd/autograd.h"
 
 namespace statkitcpp {
-
-bool IsBroadcastable(const std::vector<uint32_t>& shape1,
-                     const std::vector<uint32_t>& shape2);
 
 template <class T = float>
 class Tensor : public Variable {
@@ -21,18 +19,15 @@ private:
     std::vector<T> data_;
     uint32_t size_;
     bool requires_grad_ = true;
-
     std::string GetTypeName() const;
     uint32_t GetFlatIndex(const std::vector<uint32_t>& indexes) const;
     std::vector<uint32_t> GetIndexesFromFlat(uint32_t flat_index) const;
     template <class BinaryOperation>
     static Tensor<T> ApplyBroadcastOp(const Tensor& lhs, const Tensor& rhs,
                                BinaryOperation op);
-    std::string ShapeToString() const;
     void RecursiveToString(uint32_t depth, uint32_t& cur_index, std::string& result) const;
-
 public:
-    std::unique_ptr<Tensor> grad;
+    std::shared_ptr<GradFunction> grad_fn;
 
     Tensor();
     explicit Tensor(const std::vector<uint32_t>& shape, bool requires_grad = true);

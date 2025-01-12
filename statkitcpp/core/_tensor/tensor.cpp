@@ -1,6 +1,7 @@
 #include "tensor.h"
 #include "../errors.h"
 #include "../utils/utils.h"
+#include "shape.h"
 #include <algorithm>
 #include <cstdint>
 #include <cassert>
@@ -168,27 +169,13 @@ void Tensor<T>::RecursiveToString(uint32_t depth, uint32_t& cur_index, std::stri
 }
 
 template <typename T>
-std::string Tensor<T>::ShapeToString() const {
-    std::string shape_repr = "(";
-    for (uint32_t i = 0; i < shape_.size(); i++) {
-        const auto dim = shape_[i];
-        shape_repr += std::to_string(dim);
-        if (i < shape_.size() - 1) {
-            shape_repr += ',';
-        }
-    }
-    shape_repr += ')';
-    return shape_repr;
-}
-
-template <typename T>
 bool Tensor<T>::BroadcastableTo(const Tensor& other) {
     return IsBroadcastable(shape_, other.shape_);
 }
 
 template <typename T>
 std::string Tensor<T>::ToString() const {
-    std::string shape_repr = ShapeToString();
+    std::string shape_repr = ShapeToString(shape_);
     std::string tensor_repr;
     std::string dtype_repr = GetTypeName();
     uint32_t index = 0;
@@ -265,15 +252,4 @@ Tensor<T> Tensor<T>::Zeros(const std::vector<uint32_t>& shape) {
 template class Tensor<float>;
 template class Tensor<double>;
 
-bool IsBroadcastable(const std::vector<uint32_t>& shape1,
-                     const std::vector<uint32_t>& shape2) {
-    for (int i = std::max(shape1.size(), shape2.size()) - 1; i >= 0; i--) {
-        uint32_t dim1 = i < static_cast<int>(shape1.size()) ? shape1[i] : 1;
-        uint32_t dim2 = i < static_cast<int>(shape2.size()) ? shape2[i] : 1;
-        if (dim1 != dim2 && dim1 != 1 && dim2 != 1) {
-            return false;
-        }
-    }
-    return true;
-}  
 }

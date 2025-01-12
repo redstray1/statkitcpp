@@ -1,3 +1,5 @@
+#ifndef VARIABLE_HEADER_H
+#define VARIABLE_HEADER_H
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -19,3 +21,4 @@ public:
     virtual uint32_t GetItemSize() const = 0;
     virtual uint32_t GetNBytes() const = 0;
 };
+#endif
