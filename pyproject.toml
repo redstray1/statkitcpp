@@ -25,12 +25,7 @@ test = ["pytest"]
 wheel.expand-macos-universal-tags = true
 minimum-version = "build-system.requires"
 wheel.packages = ["statkitcpp"]
-
-# [tool.scikit-build.packages.find]
-# where = ["stubs"]
-
-# [tool.scikit-build.package-data]
-# mypkg = ["*.pyi"]
+sdist.include = ["statkitcpp/py.typed", "statkitcpp/*.pyi"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
