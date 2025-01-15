@@ -11,8 +11,7 @@
 #include <numeric>
 
 namespace statkitcpp {
-// bool IsBroadcastable(const std::vector<uint32_t>& shape1,
-//                      const std::vector<uint32_t>& shape2);
+
 // Tensor class implementation START-----------------------------------------------------
 // Constructors START------------------------------------------------------------
 template <typename  T>
@@ -54,6 +53,9 @@ Tensor<T>::Tensor(std::initializer_list<T> data,
                   const std::vector<uint32_t>& shape,
                   bool requires_grad) : data_(data) {
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    if (size_ != data_.size()) {
+        throw ReshapeError{std::to_string(data_.size()), ShapeToString(shape)};
+    }
     shape_ = shape;
     strides_.resize(shape.size(), sizeof(T));
     for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
@@ -81,12 +83,6 @@ Tensor<T>::Tensor(Tensor<T>&& other) {
 }
 
 // Constructors END------------------------------------------------------------
-
-// template<typename T>
-// template <typename U, typename = typename std::enable_if<std::is_convertible<T, U>::value>::type>
-// operator Tensor<T>::Tensor<U>() {
-
-// }
 
 template <typename T>
 std::string Tensor<T>::GetTypeName() const {
