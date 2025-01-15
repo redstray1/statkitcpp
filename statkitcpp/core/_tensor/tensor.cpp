@@ -2,12 +2,15 @@
 #include "../errors.h"
 #include "../utils/utils.h"
 #include "shape.h"
+#include "variable.h"
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cassert>
 #include <sys/types.h>
 #include <functional>
 #include <initializer_list>
+#include <memory>
 #include <numeric>
 
 namespace statkitcpp {
@@ -119,7 +122,7 @@ std::vector<uint32_t> Tensor<T>::GetIndexesFromFlat(uint32_t flat_index) const {
     std::vector<uint32_t> indexes(shape_.size(), 0);
     uint32_t size_multiplier = size_;
     if (flat_index >= size_multiplier) {
-        throw OutOfRangeFlatError{flat_index};
+        throw OutOfRangeFlatError{flat_index, size_multiplier};
     }
     for (size_t i = 0; i < shape_.size(); ++i) {
         size_multiplier /= shape_[i];
@@ -129,44 +132,44 @@ std::vector<uint32_t> Tensor<T>::GetIndexesFromFlat(uint32_t flat_index) const {
     return indexes;
 }
 
-template <typename T>
-template <class BinaryOperation>
-Tensor<T> Tensor<T>::ApplyBroadcastOp(const Tensor<T>& lhs, const Tensor<T>& rhs,
-                                      BinaryOperation op) {
-    if (!IsBroadcastable(lhs.shape_, rhs.shape_)) {
-        throw BroadcastError{lhs.ShapeToString(), rhs.ShapeToString()};
-    }                                   
-    std::vector<uint32_t> output_shape;
-    for (int i = std::max(lhs.shape_.size(), rhs.shape_.size()) - 1; i >= 0; i--) {
-        uint32_t lhs_dim = i < static_cast<int>(lhs.shape_.size()) ? lhs.shape_[i] : 1;
-        uint32_t rhs_dim = i < static_cast<int>(rhs.shape_.size()) ? rhs.shape_[i] : 1;
-        output_shape.push_back(std::max(lhs_dim, rhs_dim));
-    }
-    std::reverse(output_shape.begin(), output_shape.end());
+// template <typename T>
+// template <class BinaryOperation>
+// Tensor<T> Tensor<T>::ApplyBroadcastOp(const Tensor<T>& lhs, const Tensor<T>& rhs,
+//                                       BinaryOperation op) {
+//     if (!IsBroadcastable(lhs.shape_, rhs.shape_)) {
+//         throw BroadcastError{lhs.ShapeToString(), rhs.ShapeToString()};
+//     }                                   
+//     std::vector<uint32_t> output_shape;
+//     for (int i = std::max(lhs.shape_.size(), rhs.shape_.size()) - 1; i >= 0; i--) {
+//         uint32_t lhs_dim = i < static_cast<int>(lhs.shape_.size()) ? lhs.shape_[i] : 1;
+//         uint32_t rhs_dim = i < static_cast<int>(rhs.shape_.size()) ? rhs.shape_[i] : 1;
+//         output_shape.push_back(std::max(lhs_dim, rhs_dim));
+//     }
+//     std::reverse(output_shape.begin(), output_shape.end());
     
-    Tensor<T> output(output_shape);
+//     Tensor<T> output(output_shape);
 
-    for (size_t i = 0; i < output.size_; ++i) {
-        std::vector<uint32_t> output_indexes = output.GetIndexesFromFlat(i);
-        std::vector<uint32_t> lhs_indexes(output_indexes);
-        std::vector<uint32_t> rhs_indexes(output_indexes);
-        for (int j = static_cast<int>(lhs.shape_.size()) - 1; j >= 0; --j) {
-            if (j >= output_shape.size() || lhs.shape_[j] == 1) {
-                lhs_indexes[j] = 0;
-            }
-        }
-        for (int j = static_cast<int>(rhs.shape_.size()) - 1; j >= 0; --j) {
-            if (j >= output_shape.size() || rhs.shape_[j] == 1) {
-                rhs_indexes[j] = 0;
-            }
-        }
-        uint32_t lhs_flat_index = lhs.GetFlatIndex(lhs_indexes);
-        uint32_t rhs_flat_index = rhs.GetFlatIndex(rhs_indexes);
+//     for (size_t i = 0; i < output.size_; ++i) {
+//         std::vector<uint32_t> output_indexes = output.GetIndexesFromFlat(i);
+//         std::vector<uint32_t> lhs_indexes(output_indexes);
+//         std::vector<uint32_t> rhs_indexes(output_indexes);
+//         for (int j = static_cast<int>(lhs.shape_.size()) - 1; j >= 0; --j) {
+//             if (j >= output_shape.size() || lhs.shape_[j] == 1) {
+//                 lhs_indexes[j] = 0;
+//             }
+//         }
+//         for (int j = static_cast<int>(rhs.shape_.size()) - 1; j >= 0; --j) {
+//             if (j >= output_shape.size() || rhs.shape_[j] == 1) {
+//                 rhs_indexes[j] = 0;
+//             }
+//         }
+//         uint32_t lhs_flat_index = lhs.GetFlatIndex(lhs_indexes);
+//         uint32_t rhs_flat_index = rhs.GetFlatIndex(rhs_indexes);
 
-        output.data_[i] = op(lhs.data_[lhs_flat_index], rhs.data_[rhs_flat_index]);
-    } 
-    return output;
-}
+//         output.data_[i] = op(lhs.data_[lhs_flat_index], rhs.data_[rhs_flat_index]);
+//     } 
+//     return output;
+// }
 
 template <typename T>
 void Tensor<T>::RecursiveToString(uint32_t depth, uint32_t& cur_index, std::string& result) const {
@@ -198,6 +201,117 @@ void Tensor<T>::RecursiveToString(uint32_t depth, uint32_t& cur_index, std::stri
     }
     result += ']';
 }
+
+template <typename T>
+Tensor<T> Tensor<T>::SumImpl(int dim, bool keepdims) const {
+
+// TODO case, when array has one dimension
+
+    Tensor<T> out(RemoveDim(shape_, dim, keepdims));
+    if (dim < 0) {
+        dim += shape_.size();
+    }
+    size_t max_index_left = (dim > 0 ? shape_[0] * strides_[0] / strides_[dim - 1] : 1);
+    size_t max_index_right = strides_[dim] / GetItemSize();
+
+    for (size_t left = 0; left < max_index_left; left++) {
+        for (size_t right = 0; right < max_index_right; right++)  {
+            uint32_t out_index = left * strides_[dim] / GetItemSize() + right;
+            for (size_t k = 0; k < shape_[dim]; k++) {
+                uint32_t src_index = left * strides_[dim] / GetItemSize() * shape_[dim] + k * strides_[dim] / GetItemSize() + right;
+                if (out_index >= out.GetSize()) {
+                    throw OutOfRangeFlatError{out_index, out.GetSize()};
+                }
+                if (src_index >= GetSize()) {
+                    throw OutOfRangeFlatError{src_index, GetSize()};
+                }
+                out.data_[out_index] += data_[src_index];
+            }
+        }
+    }
+    
+    return out;
+}
+
+template <typename T>
+Tensor<T> Tensor<T>::MeanImpl(int dim, bool keepdims) const {
+
+// TODO case, when array has one dimension
+
+    Tensor<T> out(RemoveDim(shape_, dim, keepdims));
+    if (dim < 0) {
+        dim += shape_.size();
+    }
+    size_t max_index_left = (dim > 0 ? shape_[0] * strides_[0] / strides_[dim - 1] : 1);
+    size_t max_index_right = strides_[dim] / GetItemSize();
+
+    for (size_t left = 0; left < max_index_left; left++) {
+        for (size_t right = 0; right < max_index_right; right++)  {
+            uint32_t out_index = left * strides_[dim] / GetItemSize() + right;
+            for (size_t k = 0; k < shape_[dim]; k++) {
+                uint32_t src_index = left * strides_[dim] / GetItemSize() * shape_[dim] + k * strides_[dim] / GetItemSize() + right;
+                if (out_index >= out.GetSize()) {
+                    throw OutOfRangeFlatError{out_index, out.GetSize()};
+                }
+                if (src_index >= GetSize()) {
+                    throw OutOfRangeFlatError{src_index, GetSize()};
+                }
+                out.data_[out_index] += data_[src_index];
+            }
+            out.data_[out_index] /= shape_[dim];
+        }
+    }
+    
+    return out;
+}
+
+template <typename T>
+Tensor<T> Tensor<T>::VarImpl(int dim, bool keepdims) const {
+
+// TODO case, when array has one dimension
+
+    Tensor<T> out(RemoveDim(shape_, dim, keepdims));
+    if (dim < 0) {
+        dim += shape_.size();
+    }
+    size_t max_index_left = (dim > 0 ? shape_[0] * strides_[0] / strides_[dim - 1] : 1);
+    size_t max_index_right = strides_[dim] / GetItemSize();
+
+    for (size_t left = 0; left < max_index_left; left++) {
+        for (size_t right = 0; right < max_index_right; right++)  {
+            uint32_t out_index = left * strides_[dim] / GetItemSize() + right;
+            T mean = 0;
+            for (size_t k = 0; k < shape_[dim]; k++) {
+                uint32_t src_index = left * strides_[dim] / GetItemSize() * shape_[dim] + k * strides_[dim] / GetItemSize() + right;
+                if (out_index >= out.GetSize()) {
+                    throw OutOfRangeFlatError{out_index, out.GetSize()};
+                }
+                if (src_index >= GetSize()) {
+                    throw OutOfRangeFlatError{src_index, GetSize()};
+                }
+                mean += data_[src_index];
+            }
+            mean /= shape_[dim];
+            for (size_t k = 0; k < shape_[dim]; k++) {
+                uint32_t src_index = left * strides_[dim] / GetItemSize() * shape_[dim] + k * strides_[dim] / GetItemSize() + right;
+                if (out_index >= out.GetSize()) {
+                    throw OutOfRangeFlatError{out_index, out.GetSize()};
+                }
+                if (src_index >= GetSize()) {
+                    throw OutOfRangeFlatError{src_index, GetSize()};
+                }
+                out.data_[out_index] += (data_[src_index] - mean) * (data_[src_index] - mean);
+            }
+            out.data_[out_index] /= shape_[dim];
+        }
+    }
+    
+    return out;
+}
+
+//------------------------------------------------------------------------------------
+//Public methods----------------------------------------------------------------------
+//------------------------------------------------------------------------------------
 
 template <typename T>
 bool Tensor<T>::BroadcastableTo(const Tensor& other) {
@@ -270,6 +384,39 @@ bool Tensor<T>::GetRequiresGrad() const {
 // Tensor<T> Tensor<T>::operator+(const Tensor<T>& rhs) {
 //     return Tensor<T>::ApplyBroadcastOp(*this, rhs, [&](T a, T b) { return a + b; });
 // }
+
+template <typename T>
+Tensor<T> Tensor<T>::Sum(int dim, bool keepdims) const {
+    return SumImpl(dim, keepdims);
+}
+
+template <typename T>
+std::shared_ptr<Variable> Tensor<T>::ISum(int dim, bool keepdims) const {
+    auto result = std::make_shared<Tensor<T>>(Sum(dim, keepdims));
+    return result;
+}
+
+template <typename T>
+Tensor<T> Tensor<T>::Mean(int dim, bool keepdims) const {
+    return MeanImpl(dim, keepdims);
+}
+
+template <typename T>
+std::shared_ptr<Variable> Tensor<T>::IMean(int dim, bool keepdims) const {
+    auto result = std::make_shared<Tensor<T>>(Mean(dim, keepdims));
+    return result;
+}
+
+template <typename T>
+Tensor<T> Tensor<T>::Var(int dim, bool keepdims) const {
+    return VarImpl(dim, keepdims);
+}
+
+template <typename T>
+std::shared_ptr<Variable> Tensor<T>::IVar(int dim, bool keepdims) const {
+    auto result = std::make_shared<Tensor<T>>(Var(dim, keepdims));
+    return result;
+}
 
 // Tensor class implementation END-----------------------------------------------------
 

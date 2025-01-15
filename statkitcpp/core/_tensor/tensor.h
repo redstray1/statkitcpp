@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <memory>
 #include <string>
+//#include "tensor_dispatcher.h"
 #include "variable.h"
 #include "../_autograd/autograd.h"
 
@@ -15,6 +16,7 @@ namespace statkitcpp {
 
 template <class T = float>
 class Tensor : public Variable {
+friend class TensorDispatcher;
 private:
     std::vector<uint32_t> shape_;
     std::vector<uint32_t> strides_;
@@ -24,10 +26,18 @@ private:
     std::string GetTypeName() const;
     uint32_t GetFlatIndex(const std::vector<uint32_t>& indexes) const;
     std::vector<uint32_t> GetIndexesFromFlat(uint32_t flat_index) const;
-    template <class BinaryOperation>
-    static Tensor<T> ApplyBroadcastOp(const Tensor& lhs, const Tensor& rhs,
-                               BinaryOperation op);
+    // template <class BinaryOperation>
+    // static Tensor<T> ApplyBroadcastOp(const Tensor& lhs, const Tensor& rhs,
+    //                            BinaryOperation op);
     void RecursiveToString(uint32_t depth, uint32_t& cur_index, std::string& result) const;
+
+    Tensor SumImpl(int dim = -1, bool keepdims = false) const;
+    Tensor MeanImpl(int dim = -1, bool keepdims = false) const;
+    Tensor VarImpl(int dim = -1, bool keepdims = false) const;
+
+    std::shared_ptr<Variable> ISum(int dim = -1, bool keepdims = false) const override;
+    std::shared_ptr<Variable> IMean(int dim = -1, bool keepdims = false) const override;
+    std::shared_ptr<Variable> IVar(int dim = -1, bool keepdims = false) const override;
 public:
     std::shared_ptr<GradFunction> grad_fn;
 
@@ -76,8 +86,14 @@ public:
     bool GetRequiresGrad() const override;
 
     void* GetDataPointer() override { return data_.data(); }
+    auto GetData() const { return data_; };
     uint32_t GetItemSize() const override { return sizeof(T); }
     uint32_t GetNBytes() const override { return GetSize() * GetItemSize(); }
+
+// TODO case, when array has one dimension
+    Tensor Sum(int dim = -1, bool keepdims = false) const;
+    Tensor Mean(int dim = -1, bool keepdims = false) const;
+    Tensor Var(int dim = -1, bool keepdims = false) const;
 
     // Tensor<T>& operator+=(const Tensor<T>& rhs);
     // Tensor<T> operator+(const Tensor<T>& rhs);

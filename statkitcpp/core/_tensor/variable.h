@@ -1,5 +1,6 @@
 #ifndef VARIABLE_HEADER_H
 #define VARIABLE_HEADER_H
+#include <memory>
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -24,5 +25,9 @@ public:
     virtual void* GetDataPointer() = 0;
     virtual uint32_t GetItemSize() const = 0;
     virtual uint32_t GetNBytes() const = 0;
+
+    virtual std::shared_ptr<Variable> ISum(int dim, bool keepdims) const = 0;
+    virtual std::shared_ptr<Variable> IMean(int dim, bool keepdims) const = 0;
+    virtual std::shared_ptr<Variable> IVar(int dim, bool keepdims) const = 0;
 };
 #endif

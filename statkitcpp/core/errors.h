@@ -27,10 +27,16 @@ public:
         : std::invalid_argument{"Shapes " + shape1 + " and " + shape2 + " are not compatible for broadcasting."}{
     }
 };
+class DimError : public std::out_of_range {
+public:
+    explicit DimError(int dim, uint64_t dims)
+        : std::out_of_range{"Axis " + std::to_string(dim) + " out of bound of tensor of dimension " + std::to_string(dims)} {
+    }
+};
 class OutOfRangeFlatError : public std::out_of_range {
 public:
-    explicit OutOfRangeFlatError(uint32_t flat_index)
-        : std::out_of_range{"Flat index " + std::to_string(flat_index) + " out of bounds for the given shape."}{
+    explicit OutOfRangeFlatError(uint32_t flat_index, uint32_t size)
+        : std::out_of_range{"Flat index " + std::to_string(flat_index) + " out of bounds for the array of size " + std::to_string(size)}{
     }
 };
 class OutOfRangeError : public std::out_of_range {

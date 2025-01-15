@@ -26,6 +26,9 @@ void DeclareTensorDispatcher(py::module& module) {
     cls.def("reshape", &TensorDispatcher::Reshape, py::arg("new_shape"));
     cls.def_property("requires_grad", &TensorDispatcher::GetRequiresGrad, &TensorDispatcher::SetRequiresGrad);
     cls.def("broadcastable_to", &TensorDispatcher::BroadcastableTo, py::arg("other"));
+    cls.def("sum", &TensorDispatcher::Sum, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
+    cls.def("mean", &TensorDispatcher::Mean, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
+    cls.def("var", &TensorDispatcher::Var, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
 
     cls.def_buffer([](TensorDispatcher& td) -> py::buffer_info {
         if (td.GetDType() == "float32") {

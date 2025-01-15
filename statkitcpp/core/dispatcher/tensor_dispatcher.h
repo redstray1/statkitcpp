@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
-#include "../_tensor/tensor.h"
 #include "../_tensor/shape.h"
+#include "../_tensor/tensor.h"
 #include "../errors.h"
 
 namespace py = pybind11;
@@ -53,6 +53,10 @@ public:
     std::string GetDType() const;
     uint32_t GetItemSize() const;
     uint32_t GetNBytes() const;
+
+    TensorDispatcher Sum(int dim, bool keepdims) const;
+    TensorDispatcher Mean(int dim, bool keepdims) const;
+    TensorDispatcher Var(int dim, bool keepdims) const;
 };  
 
 TensorDispatcher::TensorDispatcher() {
@@ -145,6 +149,21 @@ uint32_t TensorDispatcher::GetItemSize() const {
 
 uint32_t TensorDispatcher::GetNBytes() const {
     return tensor_->GetNBytes();
+}
+
+TensorDispatcher TensorDispatcher::Sum(int dim, bool keepdims) const {
+    auto var_ptr = tensor_->ISum(dim, keepdims);
+    return TensorDispatcher(var_ptr, dtype_);
+}
+
+TensorDispatcher TensorDispatcher::Mean(int dim, bool keepdims) const {
+    auto var_ptr = tensor_->IMean(dim, keepdims);
+    return TensorDispatcher(var_ptr, dtype_);
+}
+
+TensorDispatcher TensorDispatcher::Var(int dim, bool keepdims) const {
+    auto var_ptr = tensor_->IVar(dim, keepdims);
+    return TensorDispatcher(var_ptr, dtype_);
 }
 
 }

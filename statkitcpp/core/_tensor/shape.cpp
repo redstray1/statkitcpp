@@ -1,6 +1,7 @@
 #include "shape.h"
 #include "../errors.h"
 #include <cstdint>
+#include <vector>
 
 bool CheckIndex(int index, uint32_t size) {
     return 0 <= index && index < static_cast<int>(size);
@@ -47,4 +48,25 @@ std::vector<uint32_t> BroadcastShapes(const std::vector<uint32_t>& shape1,
         output_shape[output_shape.size() - i - 1] = std::max(dim1, dim2);
     }
     return output_shape;
+}
+
+
+std::vector<uint32_t> RemoveDim(const std::vector<uint32_t>& shape, int dim, bool keepdims) {
+    std::vector<uint32_t> new_shape(shape.size() - (1 - keepdims));
+    if (dim < 0) {
+        dim += shape.size();
+    }
+    if (dim < 0 || dim >= shape.size()) {
+        throw DimError{dim, shape.size()};
+    }
+    for (size_t i = 0; i < dim; i++) {
+        new_shape[i] = shape[i];
+    }
+    for (size_t i = dim + 1; i < shape.size(); i++) {
+        new_shape[i - (1 - keepdims)] = shape[i];
+    }
+    if (keepdims) {
+        new_shape[dim] = 1;
+    }
+    return new_shape;
 }

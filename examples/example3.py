@@ -1,7 +1,9 @@
 import numpy as np
 import statkitcpp as skpp
 
-a = skpp.ones(shape=[2, 4], dtype='float64')
-b = np.array(a)
-c = np.array(a)
-print(skpp.Tensor(b + 2 * c))
+aa = np.random.random((2, 3, 2))
+
+a = skpp.Tensor(aa)
+print(a.strides, a.shape)
+print(a.sum(2))
+print(np.array(a.sum()) == np.sum(aa, axis=-1))
