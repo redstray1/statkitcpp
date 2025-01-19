@@ -1,3 +1,3 @@
-from _statkitcpp import Float32, Float64, Tensor, full, ones, zeros
+from _statkitcpp import Tensor, Scalar, ScalarType, full, ones, zeros, arange
 
-__all__ = ['Tensor', 'Float32', 'Float64', 'full', 'ones', 'zeros']
+__all__ = ['Tensor', 'Scalar', 'ScalarType', 'full', 'ones', 'zeros', 'arange']

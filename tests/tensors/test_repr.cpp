@@ -1,4 +1,6 @@
-#include "../../statkitcpp/core/_tensor/tensor.h"
+#include "../../statkitcpp/core/_tensor/Tensor.h"
+#include "../../statkitcpp/core/_tensor/TensorCreationOps.h"
+#include "datatypes.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -6,27 +8,32 @@ namespace statkitcpp {
 
 TEST_CASE("Simple repr") {
     {
-        Tensor<float> a = Tensor<float>::Zeros({1, 1});
+        Tensor a = Zeros({1, 1});
         auto res_repr = a.ToString();
         REQUIRE(res_repr == R"raw(Tensor([[0]], shape=(1,1), dtype=float32))raw");
 
-        Tensor<double> b = Tensor<double>::Zeros({1, 1});
+        Tensor b = Zeros({1, 1}, kFloat64);
         res_repr = b.ToString();
         REQUIRE(res_repr == R"raw(Tensor([[0]], shape=(1,1), dtype=float64))raw");
     }
     {
-        Tensor<float> a = Tensor<float>::Ones({1, 1});
+        Tensor a = Ones({1, 1});
         auto res_repr = a.ToString();
         REQUIRE(res_repr == R"raw(Tensor([[1]], shape=(1,1), dtype=float32))raw");
 
-        Tensor<double> b = Tensor<double>::Ones({1, 1});
+        Tensor b = Ones({1, 1},kFloat64);
         res_repr = b.ToString();
         REQUIRE(res_repr == R"raw(Tensor([[1]], shape=(1,1), dtype=float64))raw");
     }
     {
-        Tensor<float> a = Tensor<float>::Ones({3});
+        Tensor a = Ones({3});
         auto res_repr = a.ToString();
         REQUIRE(res_repr == R"raw(Tensor([1, 1, 1], shape=(3), dtype=float32))raw");
+    }
+    {
+        Tensor a = Arange(0, 5);
+        auto res_repr = a.ToString();
+        REQUIRE(res_repr == R"raw(Tensor([0, 1, 2, 3, 4], shape=(5), dtype=float32))raw");
     }
     // {
     //     Tensor<float> a = Tensor<float>::Ones({2, 3});

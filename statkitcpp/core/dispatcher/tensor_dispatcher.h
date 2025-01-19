@@ -7,7 +7,8 @@
 #include <iterator>
 #include <memory>
 #include "../_tensor/shape.h"
-#include "../_tensor/tensor.h"
+#include "../_tensor/ScalarType.h"
+#include "../_tensor/Tensor.h"
 #include "../errors.h"
 
 namespace py = pybind11;
@@ -16,15 +17,18 @@ namespace statkitcpp {
 
 class TensorDispatcher {
 private:
-    std::shared_ptr<Variable> tensor_;
-    std::string dtype_;
+    std::shared_ptr<Tensor> tensor_;
 public:
     TensorDispatcher();
-    TensorDispatcher(const std::vector<uint32_t>& shape, py::str dtype, bool requires_grad = true);
+    TensorDispatcher(const std::vector<size_t>& shape, ScalarType dtype, bool requires_grad = false);
     TensorDispatcher(const TensorDispatcher& other) = default;
     TensorDispatcher(TensorDispatcher&& other) = default;
-    TensorDispatcher(std::shared_ptr<Variable> tensor, const std::string& dtype = "float32")
-        : tensor_(std::move(tensor)), dtype_(dtype) {}
+    TensorDispatcher(std::shared_ptr<Tensor> tensor)
+        : tensor_(std::move(tensor)) {}
+    TensorDispatcher(const Tensor& tensor)
+        : tensor_(std::make_shared<Tensor>(tensor)) {}
+    TensorDispatcher(Tensor&& tensor)
+        : tensor_(std::make_shared<Tensor>(tensor)) {}
     TensorDispatcher(py::buffer b);
     ~TensorDispatcher() {}
 
@@ -34,15 +38,15 @@ public:
     std::string ToString() const;
     bool BroadcastableTo(const TensorDispatcher& other);
 
-    std::vector<uint32_t> GetShape() const;
-    void SetShape(const std::vector<uint32_t>& shape);
-    void Reshape(const std::vector<uint32_t>& new_shape);
+    std::vector<size_t> GetShape() const;
+    void SetShape(const std::vector<size_t>& shape);
+    void Reshape(const std::vector<size_t>& new_shape);
 
-    std::vector<uint32_t> GetStrides() const;
+    std::vector<size_t> GetStrides() const;
 
-    uint32_t GetSize() const;
+    size_t GetSize() const;
     
-    uint32_t GetNDim() const;
+    size_t GetNDim() const;
 
     void SetRequiresGrad(bool requires_grad);
     bool GetRequiresGrad() const;
@@ -50,28 +54,43 @@ public:
 
     auto GetDataType() const;
     void* GetDataPointer();
-    std::string GetDType() const;
-    uint32_t GetItemSize() const;
-    uint32_t GetNBytes() const;
+    ScalarType GetDType() const;
+    size_t GetItemSize() const;
+    size_t GetNBytes() const;
 
     TensorDispatcher Sum(int dim, bool keepdims) const;
     TensorDispatcher Mean(int dim, bool keepdims) const;
     TensorDispatcher Var(int dim, bool keepdims) const;
+
+    TensorDispatcher Add(const TensorDispatcher& other, const Scalar& alpha = 1) const;
+    TensorDispatcher Sub(const TensorDispatcher& other, const Scalar& alpha = 1) const;
+    TensorDispatcher Mul(const TensorDispatcher& other) const;
+    TensorDispatcher Div(const TensorDispatcher& other) const;
 };  
 
 TensorDispatcher::TensorDispatcher() {
-    dtype_ = "float32";
-    tensor_ = std::make_shared<Tensor<float>>();
+    tensor_ = std::make_shared<Tensor>();
 }
 
-TensorDispatcher::TensorDispatcher(const std::vector<uint32_t>& shape, py::str dtype, bool requires_grad) {
-    std::string dtype_str = static_cast<std::string>(dtype);
-    if (dtype_str == "float32") {
-        tensor_ = std::make_shared<Tensor<float>>(shape, requires_grad);
-        dtype_ = dtype_str;
-    } else if (dtype_str == "float64") {
-        tensor_ = std::make_shared<Tensor<double>>(shape, requires_grad);
-        dtype_ = dtype_str;
+TensorDispatcher::TensorDispatcher(const std::vector<size_t>& shape, ScalarType dtype, bool requires_grad) {
+    tensor_ = std::make_shared<Tensor>(shape, dtype, requires_grad);
+}
+
+ScalarType NumpyTypeToScalarType(py::buffer_info& info) {
+    if (info.item_type_is_equivalent_to<int8_t>()) {
+        return ScalarType::Char;
+    } else if (info.item_type_is_equivalent_to<int16_t>()) {
+        return ScalarType::Short;
+    } else if (info.item_type_is_equivalent_to<int>()) {
+        return ScalarType::Int;
+    } else if (info.item_type_is_equivalent_to<int64_t>()) {
+        return ScalarType::Long;
+    } else if (info.item_type_is_equivalent_to<float>()) {
+        return ScalarType::Float;
+    } else if (info.item_type_is_equivalent_to<double>()) {
+        return ScalarType::Double;
+    } else if (info.item_type_is_equivalent_to<bool>()) {
+        return ScalarType::Bool;
     } else {
         throw InvalidDatatypeError{};
     }
@@ -79,20 +98,12 @@ TensorDispatcher::TensorDispatcher(const std::vector<uint32_t>& shape, py::str d
 
 TensorDispatcher::TensorDispatcher(py::buffer b) {
     py::buffer_info info = b.request();
-    std::vector<uint32_t> shape;
+    std::vector<size_t> shape;
     std::transform(info.shape.begin(), info.shape.end(), std::back_inserter(shape), [](const int value)
     {
-        return static_cast<uint32_t>(value);
+        return static_cast<size_t>(value);
     });
-    if (info.item_type_is_equivalent_to<float>()) {
-        tensor_ = std::make_shared<Tensor<float>>(static_cast<float*>(info.ptr), shape);
-        dtype_ = "float32";
-    } else if (info.item_type_is_equivalent_to<double>())  {
-        tensor_ = std::make_shared<Tensor<double>>(static_cast<double*>(info.ptr), shape);
-        dtype_ = "float64";
-    } else {
-        throw InvalidDatatypeError{};
-    }
+    tensor_ = std::make_shared<Tensor>(info.ptr, shape, NumpyTypeToScalarType(info), false);
 }
 
 std::string TensorDispatcher::ToString() const {
@@ -103,27 +114,27 @@ bool TensorDispatcher::BroadcastableTo(const TensorDispatcher& other) {
     return IsBroadcastable(tensor_->GetShape(), other.GetShape());
 }
 
-std::vector<uint32_t> TensorDispatcher::GetShape() const {
+std::vector<size_t> TensorDispatcher::GetShape() const {
     return tensor_->GetShape();
 }
 
-void TensorDispatcher::SetShape(const std::vector<uint32_t>& new_shape) {
+void TensorDispatcher::SetShape(const std::vector<size_t>& new_shape) {
     tensor_->SetShape(new_shape);
 }
 
-void TensorDispatcher::Reshape(const std::vector<uint32_t>& new_shape) {
+void TensorDispatcher::Reshape(const std::vector<size_t>& new_shape) {
     tensor_->Reshape(new_shape);
 } 
 
-std::vector<uint32_t> TensorDispatcher::GetStrides() const {
+std::vector<size_t> TensorDispatcher::GetStrides() const {
     return tensor_->GetStrides();
 }
 
-uint32_t TensorDispatcher::GetSize() const {
+size_t TensorDispatcher::GetSize() const {
     return tensor_->GetSize();
 }
 
-uint32_t TensorDispatcher::GetNDim() const {
+size_t TensorDispatcher::GetNDim() const {
     return tensor_->GetNDim();
 }
 
@@ -139,31 +150,51 @@ void* TensorDispatcher::GetDataPointer() {
     return tensor_->GetDataPointer();
 }
 
-std::string TensorDispatcher::GetDType() const {
-    return dtype_;
+ScalarType TensorDispatcher::GetDType() const {
+    return tensor_->GetDType();
 }
 
-uint32_t TensorDispatcher::GetItemSize() const {
+size_t TensorDispatcher::GetItemSize() const {
     return tensor_->GetItemSize();
 }
 
-uint32_t TensorDispatcher::GetNBytes() const {
+size_t TensorDispatcher::GetNBytes() const {
     return tensor_->GetNBytes();
 }
 
 TensorDispatcher TensorDispatcher::Sum(int dim, bool keepdims) const {
-    auto var_ptr = tensor_->ISum(dim, keepdims);
-    return TensorDispatcher(var_ptr, dtype_);
+    auto var_ptr = tensor_->Sum(dim, keepdims);
+    return TensorDispatcher(var_ptr);
 }
 
 TensorDispatcher TensorDispatcher::Mean(int dim, bool keepdims) const {
-    auto var_ptr = tensor_->IMean(dim, keepdims);
-    return TensorDispatcher(var_ptr, dtype_);
+    auto var_ptr = tensor_->Mean(dim, keepdims);
+    return TensorDispatcher(var_ptr);
 }
 
 TensorDispatcher TensorDispatcher::Var(int dim, bool keepdims) const {
-    auto var_ptr = tensor_->IVar(dim, keepdims);
-    return TensorDispatcher(var_ptr, dtype_);
+    auto var_ptr = tensor_->Var(dim, keepdims);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Add(const TensorDispatcher& other, const Scalar& alpha) const {
+    auto var_ptr = tensor_->Add(*other.tensor_, alpha);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Sub(const TensorDispatcher& other, const Scalar& alpha) const {
+    auto var_ptr = tensor_->Sub(*other.tensor_, alpha);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Mul(const TensorDispatcher& other) const {
+    auto var_ptr = tensor_->Mul(*other.tensor_);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Div(const TensorDispatcher& other) const {
+    auto var_ptr = tensor_->Div(*other.tensor_);
+    return TensorDispatcher(var_ptr);
 }
 
 }

@@ -1,7 +1,6 @@
-#include "../../statkitcpp/core/_tensor/tensor.h"
+#include "../../statkitcpp/core/_tensor/Tensor.h"
 
 #include <catch2/catch_test_macros.hpp>
-#include <cstdint>
 
 namespace statkitcpp {
 
@@ -15,7 +14,7 @@ void CheckVector(const std::vector<T1>& v1, const std::vector<T2>& v2) {
 
 TEST_CASE("Base info of Tensor") {
     {
-        Tensor<float> a({2, 2});
+        Tensor a({2, 2});
         CHECK(a.GetItemSize() == 4);
         CHECK(a.GetNBytes() == 16);
         CHECK(a.GetSize() == 4);
@@ -24,7 +23,7 @@ TEST_CASE("Base info of Tensor") {
         CheckVector(a.GetStrides(), r);
     }
     {
-        Tensor<float> a({2, 3, 2, 2, 4});
+        Tensor a({2, 3, 2, 2, 4});
         CHECK(a.GetItemSize() == 4);
         CHECK(a.GetNBytes() == 384);
         CHECK(a.GetSize() == 96);
