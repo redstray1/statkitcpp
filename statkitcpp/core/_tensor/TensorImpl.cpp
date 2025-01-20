@@ -24,7 +24,7 @@ TensorImpl::TensorImpl() {
 TensorImpl::TensorImpl(const std::vector<size_t>& shape, ScalarType dtype) {
     shape_ = shape;
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
-    strides_.resize(shape.size(), ItemSize(dtype));
+    strides_.resize(shape.size(), 1);
     dtype_ = dtype;
     for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
         strides_[i] = strides_[i + 1] * shape[i + 1];
@@ -37,12 +37,25 @@ TensorImpl::TensorImpl(void* data,
                   ScalarType dtype) {
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     shape_ = shape;
-    strides_.resize(shape.size(), ItemSize(dtype));
+    strides_.resize(shape.size(), 1);
     dtype_ = dtype;
     for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
         strides_[i] = strides_[i + 1] * shape[i + 1];
     }
     storage_ = Storage(data, size_ * ItemSize(dtype));
+}
+
+TensorImpl::TensorImpl(const Storage& storage,
+                       const std::vector<size_t>& shape,
+                       ScalarType dtype) {
+    size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
+    shape_ = shape;
+    strides_.resize(shape.size(), 1);
+    dtype_ = dtype;
+    for (int i = static_cast<int>(shape.size()) - 2; i >= 0; i--) {
+        strides_[i] = strides_[i + 1] * shape[i + 1];
+    }
+    storage_ = storage;
 }
 
 // Constructors END------------------------------------------------------------
@@ -78,9 +91,9 @@ std::vector<size_t> TensorImpl::GetIndexesFromFlat(size_t flat_index) const {
 void TensorImpl::RecursiveToString(size_t depth, size_t& cur_index, std::string& result) const {
     result += '[';
     if (depth == shape_.size() - 1) {
-        for (int i = 0; i < shape_[depth]; i++) {
+        for (int i = 0; i < static_cast<int>(shape_[depth]); i++) {
             result += storage_.ToString(cur_index, dtype_);
-            if (i < shape_[depth] - 1) {
+            if (i < static_cast<int>(shape_[depth]) - 1) {
                 result += ", ";
             }
             cur_index++;
@@ -89,16 +102,16 @@ void TensorImpl::RecursiveToString(size_t depth, size_t& cur_index, std::string&
         return;
     }
     std::string newline;
-    for (int i = 0; i < shape_.size() - depth - 1; i++) {
+    for (int i = 0; i < static_cast<int>(shape_.size() - depth - 1); i++) {
         newline += '\n';
     }
     std::string shift = "        ";
-    for (int i = 0; i < depth; i++) {
+    for (int i = 0; i < static_cast<int>(depth); i++) {
         shift += ' ';
     }
-    for (int i = 0; i < shape_[depth]; i++) {
+    for (int i = 0; i < static_cast<int>(shape_[depth]); i++) {
         RecursiveToString(depth + 1, cur_index, result);
-        if (i < shape_[depth] - 1) {
+        if (i < static_cast<int>(shape_[depth]) - 1) {
             result += "," + newline + shift;
         }
     }
@@ -115,19 +128,19 @@ std::string TensorImpl::ToString() const {
     std::string dtype_repr = GetTypeName();
     size_t index = 0;
     RecursiveToString(0, index, tensor_repr);
-    std::string result = "Tensor(" + tensor_repr + ", shape=" + shape_repr + ", dtype=" + dtype_repr + ")";
+    std::string result = "Tensor(" + tensor_repr + ", shape=" + shape_repr + ", dtype=" + dtype_repr;
     return result;
 }
 
-std::vector<size_t> TensorImpl::GetShape() const {
+const std::vector<size_t> TensorImpl::GetShape() const {
     return shape_;
 }
 
 void TensorImpl::SetShape(const std::vector<size_t>& shape) {
-    auto new_size =
+    size_t new_size =
         std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     if (new_size != size_) {
-        throw ReshapeError{std::to_string(size_), ShapeToString(shape)};
+        throw ReshapeError{size_, ShapeToString(shape)};
     }
     shape_ = shape;
 }
@@ -136,7 +149,7 @@ void TensorImpl::Reshape(const std::vector<size_t>& new_shape) {
     SetShape(new_shape);
 }
 
-std::vector<size_t> TensorImpl::GetStrides() const {
+const std::vector<size_t> TensorImpl::GetStrides() const {
     return strides_;
 }
 

@@ -19,7 +19,7 @@ TEST_CASE("Base info of Tensor") {
         CHECK(a.GetNBytes() == 16);
         CHECK(a.GetSize() == 4);
         CHECK(a.GetNDim() == 2);
-        std::vector<uint32_t> r = {8, 4};
+        std::vector<uint32_t> r = {2, 1};
         CheckVector(a.GetStrides(), r);
     }
     {
@@ -28,7 +28,7 @@ TEST_CASE("Base info of Tensor") {
         CHECK(a.GetNBytes() == 384);
         CHECK(a.GetSize() == 96);
         CHECK(a.GetNDim() == 5);
-        std::vector<uint32_t> r = {192, 64, 32, 16, 4};
+        std::vector<uint32_t> r = {48, 16, 8, 4, 1};
         CheckVector(a.GetStrides(), r);
     }
 }

@@ -19,14 +19,14 @@ void mean_(const T* data, //NOLINT
           T* out,
           size_t out_bytes) {
     size_t max_index_left = (dim > 0 ? shape[0] * strides[0] / strides[dim - 1] : 1);
-    size_t max_index_right = strides[dim] / itemsize;
+    size_t max_index_right = strides[dim];
 
     for (size_t left = 0; left < max_index_left; left++) {
         for (size_t right = 0; right < max_index_right; right++)  {
-            size_t out_index = left * strides[dim] / itemsize + right;
+            size_t out_index = left * strides[dim] + right;
             out[out_index] = static_cast<T>(0);
             for (size_t k = 0; k < shape[dim]; k++) {
-                size_t src_index = left * strides[dim] / itemsize * shape[dim] + k * strides[dim] / itemsize + right;
+                size_t src_index = left * strides[dim] * shape[dim] + k * strides[dim] + right;
                 if (out_index >= out_bytes / itemsize) {
                     throw OutOfRangeFlatError{out_index, out_bytes / itemsize};
                 }
@@ -45,7 +45,6 @@ void mean(const Storage& data, //NOLINT
          const std::vector<size_t>& shape,
          const std::vector<size_t>& strides,
          int dim,
-         bool keepdims,
          Storage& out) {
     #define DEFINE_TEMPLATE(T, name) \
     case (ScalarType::name): {\

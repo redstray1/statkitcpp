@@ -1,10 +1,12 @@
 #ifndef TENSOR_HEADER_H
 #define TENSOR_HEADER_H
+#include <cstddef>
 #include <vector>
 #include <math.h>
 #include <sys/types.h>
 #include <memory>
 #include <string>
+#include <optional>
 //#include "tensor_dispatcher.h"
 #include "../datatypes.h"
 #include "Scalar.h"
@@ -34,12 +36,17 @@ private:
     friend Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op);
 public:
     std::shared_ptr<GradFunction> grad_fn = nullptr;
+    std::shared_ptr<Tensor> grad = nullptr;
 
     Tensor();
     explicit Tensor(const std::vector<size_t>& shape,
                     ScalarType dtype = kFloat32,
                     bool requires_grad = false);
     explicit Tensor(void* data, 
+                    const std::vector<size_t>& shape,
+                    ScalarType dtype = kFloat32,
+                    bool requires_grad = false);
+    explicit Tensor(const Storage& storage,
                     const std::vector<size_t>& shape,
                     ScalarType dtype = kFloat32,
                     bool requires_grad = false);
@@ -55,13 +62,13 @@ public:
 
     Tensor ToType(ScalarType t) const;
 
-    std::string ToString() const { return impl_->ToString(); }
+    std::string ToString() const;
 
-    std::vector<size_t> GetShape() const { return impl_->GetShape(); };
-    void SetShape(const std::vector<size_t>& shape) { impl_->SetShape(shape); }
-    void Reshape(const std::vector<size_t>& new_shape) {impl_->Reshape(new_shape); };
+    const std::vector<size_t> GetShape() const { return impl_->GetShape(); };
+    void SetShape(const std::vector<size_t>& shape) { *this = Reshape(shape); }
+    Tensor Reshape(const std::vector<size_t>& shape);
 
-    std::vector<size_t> GetStrides() const { return impl_->GetStrides(); };
+    const std::vector<size_t> GetStrides() const { return impl_->GetStrides(); };
 
     ScalarType GetDType() const { return impl_->GetDType(); }
     size_t GetSize() const { return impl_->GetSize(); };
@@ -69,6 +76,7 @@ public:
 
     void SetRequiresGrad(bool requires_grad) { requires_grad_ = requires_grad; };
     bool GetRequiresGrad() const { return requires_grad_; };
+    bool IsLeaf() const { return grad_fn == nullptr; }
 
     void* GetDataPointer()  { return impl_->GetDataPointer(); }
     void* GetDataPointer() const  { return impl_->GetDataPointer(); }
@@ -77,23 +85,42 @@ public:
     size_t GetItemSize() const  { return impl_->GetItemSize(); }
     size_t GetNBytes() const  { return impl_->GetNBytes(); }
 
+    Tensor& GetGrad() { 
+        if (grad == nullptr) {
+            throw std::runtime_error{"There is no grad in this tensor"};
+        }
+        return *grad;
+    }
+
     bool BroadcastableTo(const Tensor& other);
 
-    Tensor Sum(int dim = -1, bool keepdims = false) const;
-    Tensor Mean(int dim = -1, bool keepdims = false) const;
-    Tensor Var(int dim = -1, bool keepdims = false) const;
+    void Backward(std::optional<Tensor> grad_output = std::nullopt, std::optional<Tensor> output = std::nullopt, bool retain_graph=false);
 
-    Tensor Add(const Tensor& other, const Scalar& alpha = 1) const;
+    Tensor Sum(int dim = -1, bool keepdims = false);
+    Tensor Prod(int dim = -1, bool keepdims = false);
+    Tensor Mean(int dim = -1, bool keepdims = false);
+    Tensor Var(int dim = -1, bool keepdims = false);
+
+    Tensor Add(Tensor& other, const Scalar& alpha = 1);
     Tensor Add(const Scalar& other) const;
 
-    Tensor Sub(const Tensor& other, const Scalar& alpha = 1) const;
+    Tensor Sub(Tensor& other, const Scalar& alpha = 1);
     Tensor Sub(const Scalar& other) const;
 
-    Tensor Mul(const Tensor& other) const;
+    Tensor Mul(Tensor& other);
     Tensor Mul(const Scalar& other) const;
 
-    Tensor Div(const Tensor& other) const;
+    Tensor Div(Tensor& other);
     Tensor Div(const Scalar& other) const;
+
+    Tensor Pow(Tensor& other);
+    Tensor Pow(const Scalar& other) const;
+
+    Tensor Neg();
+    Tensor Exp();
+    Tensor Log();
+    Tensor Sqrt();
+
 
     // Tensor<T>& operator+=(const Tensor<T>& rhs);
     // Tensor<T> operator+(const Tensor<T>& rhs);

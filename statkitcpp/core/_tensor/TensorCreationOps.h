@@ -2,7 +2,9 @@
 
 #include "ScalarType.h"
 #include "datatypes.h"
-#include "Tensor.h"
+#include "Scalar.h"
+#include <vector>
+#include "../include_fwd.h"
 
 namespace statkitcpp {
 

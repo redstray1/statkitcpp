@@ -10,7 +10,7 @@ namespace statkitcpp {
 namespace ops {
 
 template <typename T>
-void var_(const T* data, //NOLINT
+void prod_(const T* data, //NOLINT
           size_t itemsize,
           size_t n_bytes,
           int dim,
@@ -18,14 +18,13 @@ void var_(const T* data, //NOLINT
           const std::vector<size_t>& strides,
           T* out,
           size_t out_bytes) {
-        size_t max_index_left = (dim > 0 ? shape[0] * strides[0] / strides[dim - 1] : 1);
+    size_t max_index_left = (dim > 0 ? shape[0] * strides[0] / strides[dim - 1] : 1);
     size_t max_index_right = strides[dim];
 
     for (size_t left = 0; left < max_index_left; left++) {
         for (size_t right = 0; right < max_index_right; right++)  {
             size_t out_index = left * strides[dim] + right;
-            T mean = 0;
-            out[out_index] = static_cast<T>(0);
+            out[out_index] = static_cast<T>(1);
             for (size_t k = 0; k < shape[dim]; k++) {
                 size_t src_index = left * strides[dim] * shape[dim] + k * strides[dim] + right;
                 if (out_index >= out_bytes / itemsize) {
@@ -34,25 +33,13 @@ void var_(const T* data, //NOLINT
                 if (src_index >= n_bytes / itemsize) {
                     throw OutOfRangeFlatError{src_index, n_bytes / itemsize};
                 }
-                mean += data[src_index];
+                out[out_index] *= data[src_index];
             }
-            mean /= shape[dim];
-            for (size_t k = 0; k < shape[dim]; k++) {
-                size_t src_index = left * strides[dim] * shape[dim] + k * strides[dim] + right;
-                if (out_index >= out_bytes / itemsize) {
-                    throw OutOfRangeFlatError{out_index, out_bytes / itemsize};
-                }
-                if (src_index >= n_bytes / itemsize) {
-                    throw OutOfRangeFlatError{src_index, n_bytes / itemsize};
-                }
-                out[out_index] += (data[src_index] - mean) * (data[src_index] - mean);
-            }
-            out[out_index] /= shape[dim];
         }
     }
 }
 
-void var(const Storage& data, //NOLINT
+void prod(const Storage& data, //NOLINT
          ScalarType dtype,
          const std::vector<size_t>& shape,
          const std::vector<size_t>& strides,
@@ -62,7 +49,7 @@ void var(const Storage& data, //NOLINT
     case (ScalarType::name): {\
         auto p = static_cast<const T*>(data.GetDataPtr()); \
         auto o = static_cast<T*>(out.GetDataPtr()); \
-        var_<T>(p, ItemSize(dtype), data.GetNbytes(), dim, shape, strides, o, out.GetNbytes()); \
+        prod_<T>(p, ItemSize(dtype), data.GetNbytes(), dim, shape, strides, o, out.GetNbytes()); \
         break; \
     }
     switch (dtype) {
@@ -72,6 +59,5 @@ void var(const Storage& data, //NOLINT
     }
     #undef DEFINE_TEMPLATE
 }
-
 }
 }

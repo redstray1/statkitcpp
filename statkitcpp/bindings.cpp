@@ -27,29 +27,49 @@ void DeclareTensor(py::module& module) {
     cls.def_property_readonly("dtype", &TensorDispatcher::GetDType);
     cls.def_property_readonly("strides", &TensorDispatcher::GetStrides);
     cls.def_property("shape", &TensorDispatcher::GetShape, &TensorDispatcher::SetShape);
-    cls.def("reshape", &TensorDispatcher::Reshape, py::arg("new_shape"));
     cls.def_property("requires_grad", &TensorDispatcher::GetRequiresGrad, &TensorDispatcher::SetRequiresGrad);
     cls.def("broadcastable_to", &TensorDispatcher::BroadcastableTo, py::arg("other"));
     
+    //Aggregation functions
     cls.def("sum", &TensorDispatcher::Sum, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
+    cls.def("prod", &TensorDispatcher::Prod, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
     cls.def("mean", &TensorDispatcher::Mean, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
     cls.def("var", &TensorDispatcher::Var, py::arg("dim") = -1, py::kw_only(), py::arg("keepdims") = false);
     
+    //Binary operations
     cls.def("add", &TensorDispatcher::Add, py::arg("other"), py::arg("alpha") = Scalar(1));
     cls.def("sub", &TensorDispatcher::Sub, py::arg("other"), py::arg("alpha") = Scalar(1));
     cls.def("mul", &TensorDispatcher::Mul, py::arg("other"));
     cls.def("div", &TensorDispatcher::Div, py::arg("other"));
+    cls.def("pow", &TensorDispatcher::Pow, py::arg("other"));
+
+    //Pointwise operations
+    cls.def("neg", &TensorDispatcher::Neg);
+    cls.def("exp", &TensorDispatcher::Exp);
+    cls.def("log", &TensorDispatcher::Log);
+    cls.def("sqrt", &TensorDispatcher::Sqrt);
+
+    //Tensor operations
+    cls.def("reshape", &TensorDispatcher::Reshape, py::arg("shape"));
+
+    //Backward method
+    cls.def("backward", &TensorDispatcher::Backward, py::arg("grad_output") = py::none(), py::arg("output") = py::none(), py::arg("retain_graph") = false);
 
     #define DEFINE_BUFFER_INFO(T, name) \
-    case ScalarType::name: \
+    case ScalarType::name: {\
+        std::vector<size_t> strides = td.GetStrides(); \
+        for (auto& x : strides) { \
+            x *= td.GetItemSize(); \
+        } \
         return py::buffer_info( \
             td.GetDataPointer(), \
             td.GetItemSize(), \
             py::format_descriptor<T>::format(), \
             td.GetNDim(), \
             td.GetShape(), \
-            td.GetStrides() \
-        );
+            strides \
+        ); \
+    }
 
     cls.def_buffer([](TensorDispatcher& td) -> py::buffer_info {
         switch(td.GetDType()) {

@@ -56,16 +56,15 @@ void ones(Tensor& data) { //NOLINT
     #undef DEFINE_TENSOR_ONES
 }
 
-void arange(Tensor& data, const Scalar& start, const Scalar& end, const Scalar& step) {
+void arange(Tensor& data, const Scalar& start, [[maybe_unused]]const Scalar& end, const Scalar& step) {
     #define DEFINE_ARANGE_TYPE(T, name) \
     case (ScalarType::name):{ \
         T start_ = start.to##name(); \
-        T end_ = end.to##name(); \
         T step_ = step.to##name(); \
         auto p = static_cast<T*>(data.GetDataPointer()); \
         for (size_t i = 0; i < data.GetSize(); i++) { \
             T value_ = start_ + static_cast<T>(i) * step_; \
-            if (i >= data.GetSize() || i < 0) { \
+            if (i >= data.GetSize()) { \
                 throw OutOfRangeFlatError{i, data.GetSize()}; \
             } \
             p[i] = value_; \

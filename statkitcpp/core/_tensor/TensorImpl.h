@@ -48,6 +48,9 @@ public:
     explicit TensorImpl(void* data, 
                         const std::vector<size_t>& shape,
                         ScalarType dtype);
+    explicit TensorImpl(const Storage& data,
+                        const std::vector<size_t>& shape,
+                        ScalarType dtype);
     TensorImpl(const TensorImpl& other) = delete;
     TensorImpl(TensorImpl&& other) = delete;
     ~TensorImpl() {}
@@ -59,11 +62,11 @@ public:
     std::string GetTypeName() const;
     std::string ToString() const;
 
-    std::vector<size_t> GetShape() const;
+    const std::vector<size_t> GetShape() const;
     void SetShape(const std::vector<size_t>& shape);
     void Reshape(const std::vector<size_t>& new_shape);
 
-    std::vector<size_t> GetStrides() const;
+    const std::vector<size_t> GetStrides() const;
 
     size_t GetSize() const ;
     

@@ -19,7 +19,7 @@ constexpr auto kIndex2dtype = ArrayOf<
 constexpr std::array<int64_t, static_cast<size_t>(ScalarType::NumOptions)>
 CalcDType2Index() {
     std::array<int64_t, static_cast<size_t>(ScalarType::NumOptions)> inverse = {};
-    for (int64_t i = 0; i < static_cast<size_t>(ScalarType::NumOptions); i++) {
+    for (int64_t i = 0; i < static_cast<int64_t>(ScalarType::NumOptions); i++) {
         inverse[i] = -1;
     }
     for (int64_t i = 0; i < static_cast<int64_t>(kIndex2dtype.size()); i++) {

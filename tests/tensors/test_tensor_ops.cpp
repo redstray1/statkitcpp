@@ -7,19 +7,12 @@
 
 namespace statkitcpp {
 
-TEST_CASE("Add operation") {
-    {
-        Tensor a = Ones({2, 3});
-        Tensor b = Ones({1, 3});
-        Tensor c = a.Add(b);
-        CHECK(c.GetDType() == kFloat32);
-    }
+TEST_CASE("Reshape operation") {
     {
         Tensor a = Arange(0, 5);
-        Tensor b = Full({1, 5}, 0.33);
-        Tensor c = a.Add(b);
+        Tensor c = a.Reshape({5, 1});
         CHECK(c.GetDType() == kFloat32);
-        // std::cout << c.ToString();
+        std::cout << c.ToString();
     }
 }
 

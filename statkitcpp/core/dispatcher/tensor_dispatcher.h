@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <memory>
 #include "../_tensor/shape.h"
 #include "../_tensor/ScalarType.h"
@@ -38,9 +39,13 @@ public:
     std::string ToString() const;
     bool BroadcastableTo(const TensorDispatcher& other);
 
+    void Backward(std::optional<TensorDispatcher> grad_output = std::nullopt,
+                  std::optional<TensorDispatcher> output = std::nullopt,
+                  bool retain_graph = false);
+
     std::vector<size_t> GetShape() const;
     void SetShape(const std::vector<size_t>& shape);
-    void Reshape(const std::vector<size_t>& new_shape);
+    TensorDispatcher Reshape(const std::vector<size_t>& shape);
 
     std::vector<size_t> GetStrides() const;
 
@@ -59,6 +64,7 @@ public:
     size_t GetNBytes() const;
 
     TensorDispatcher Sum(int dim, bool keepdims) const;
+    TensorDispatcher Prod(int dim, bool keepdims) const;
     TensorDispatcher Mean(int dim, bool keepdims) const;
     TensorDispatcher Var(int dim, bool keepdims) const;
 
@@ -66,6 +72,12 @@ public:
     TensorDispatcher Sub(const TensorDispatcher& other, const Scalar& alpha = 1) const;
     TensorDispatcher Mul(const TensorDispatcher& other) const;
     TensorDispatcher Div(const TensorDispatcher& other) const;
+    TensorDispatcher Pow(const TensorDispatcher& other) const;
+
+    TensorDispatcher Neg() const;
+    TensorDispatcher Exp() const;
+    TensorDispatcher Log() const;
+    TensorDispatcher Sqrt() const;
 };  
 
 TensorDispatcher::TensorDispatcher() {
@@ -110,6 +122,20 @@ std::string TensorDispatcher::ToString() const {
     return tensor_->ToString();
 }
 
+void TensorDispatcher::Backward(std::optional<TensorDispatcher> grad_output,
+                                std::optional<TensorDispatcher> output,
+                                bool retain_graph) {
+    std::optional<Tensor> grad_o = std::nullopt;
+    std::optional<Tensor> o = std::nullopt;
+    if (grad_output.has_value()) {
+        grad_o = *(grad_output.value().tensor_);
+    }
+    if (output.has_value()) {
+        o = *(output.value().tensor_);
+    }
+    tensor_->Backward(grad_o, o, retain_graph);
+}
+
 bool TensorDispatcher::BroadcastableTo(const TensorDispatcher& other) {
     return IsBroadcastable(tensor_->GetShape(), other.GetShape());
 }
@@ -118,12 +144,13 @@ std::vector<size_t> TensorDispatcher::GetShape() const {
     return tensor_->GetShape();
 }
 
-void TensorDispatcher::SetShape(const std::vector<size_t>& new_shape) {
-    tensor_->SetShape(new_shape);
+void TensorDispatcher::SetShape(const std::vector<size_t>& shape) {
+    tensor_->SetShape(shape);
 }
 
-void TensorDispatcher::Reshape(const std::vector<size_t>& new_shape) {
-    tensor_->Reshape(new_shape);
+TensorDispatcher TensorDispatcher::Reshape(const std::vector<size_t>& shape) {
+    auto var_ptr = tensor_->Reshape(shape);
+    return TensorDispatcher(var_ptr);
 } 
 
 std::vector<size_t> TensorDispatcher::GetStrides() const {
@@ -167,6 +194,11 @@ TensorDispatcher TensorDispatcher::Sum(int dim, bool keepdims) const {
     return TensorDispatcher(var_ptr);
 }
 
+TensorDispatcher TensorDispatcher::Prod(int dim, bool keepdims) const {
+    auto var_ptr = tensor_->Prod(dim, keepdims);
+    return TensorDispatcher(var_ptr);
+}
+
 TensorDispatcher TensorDispatcher::Mean(int dim, bool keepdims) const {
     auto var_ptr = tensor_->Mean(dim, keepdims);
     return TensorDispatcher(var_ptr);
@@ -194,6 +226,31 @@ TensorDispatcher TensorDispatcher::Mul(const TensorDispatcher& other) const {
 
 TensorDispatcher TensorDispatcher::Div(const TensorDispatcher& other) const {
     auto var_ptr = tensor_->Div(*other.tensor_);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Pow(const TensorDispatcher& other) const {
+    auto var_ptr = tensor_->Pow(*other.tensor_);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Neg() const {
+    auto var_ptr = tensor_->Neg();
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Exp() const {
+    auto var_ptr = tensor_->Exp();
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Log() const {
+    auto var_ptr = tensor_->Log();
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Sqrt() const {
+    auto var_ptr = tensor_->Sqrt();
     return TensorDispatcher(var_ptr);
 }
 

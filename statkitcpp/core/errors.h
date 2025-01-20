@@ -10,8 +10,8 @@ public:
 };
 class ReshapeError : public std::runtime_error {
 public:
-    explicit ReshapeError(const std::string& size, const std::string& shape)
-        : std::runtime_error{"Cannot reshape tensor of size " + size + " into shape " + shape} {
+    explicit ReshapeError(size_t size, const std::string& shape)
+        : std::runtime_error{"Cannot reshape tensor of size " + std::to_string(size) + " into shape " + shape} {
     }
 };
 class InvalidDatatypeError : public std::runtime_error {
