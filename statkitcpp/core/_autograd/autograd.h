@@ -12,5 +12,7 @@ public:
     virtual std::string GetName() const = 0;
 };
 
+void RunBackward(Tensor* start);
+
 }
 #endif

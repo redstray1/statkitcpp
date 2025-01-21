@@ -1,6 +1,7 @@
 add_library(libcore STATIC
     core/_tensor/Tensor.cpp
     core/_tensor/TensorImpl.cpp
+    core/_tensor/TensorOperations.cpp
     core/_tensor/shape.cpp
     core/_autograd/autograd.cpp
     core/_autograd/TensorOperations.cpp

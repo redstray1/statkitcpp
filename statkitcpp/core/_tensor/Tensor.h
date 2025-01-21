@@ -13,6 +13,7 @@
 #include "ScalarType.h"
 #include "TensorImpl.h"
 #include "../_autograd/autograd.h"
+#include "tensor_defines.h"
 #include "Storage.h"
 
 namespace statkitcpp {
@@ -57,8 +58,7 @@ public:
     Tensor& operator=(const Tensor& other) = default;
     Tensor& operator=(Tensor&& other) = default;
 
-    Tensor& operator=(const Scalar& other);
-    Tensor& operator=(Scalar&& other);
+    Tensor& operator=(const Scalar& other) &&;
 
     Tensor ToType(ScalarType t) const;
 
@@ -96,34 +96,14 @@ public:
 
     void Backward(std::optional<Tensor> grad_output = std::nullopt, std::optional<Tensor> output = std::nullopt, bool retain_graph=false);
 
-    Tensor Sum(int dim = -1, bool keepdims = false);
-    Tensor Prod(int dim = -1, bool keepdims = false);
-    Tensor Mean(int dim = -1, bool keepdims = false);
-    Tensor Var(int dim = -1, bool keepdims = false);
+    TENSOR_AGGREGATION_METHODS(AGGREGATION_DECLARATIONS)
 
-    Tensor Add(Tensor& other, const Scalar& alpha = 1);
-    Tensor Add(const Scalar& other) const;
+    TENSOR_BINARY_DECLARATIONS_WITH_OP(OPERATOR_METHODS_DECLARATIONS)
+    TENSOR_BINARY_DECLARATIONS_WITH_OP(OPERATOR_DECLARATIONS)
 
-    Tensor Sub(Tensor& other, const Scalar& alpha = 1);
-    Tensor Sub(const Scalar& other) const;
+    TENSOR_BINARY_DECLARATIONS_WITHOUT_OP(OPERATOR_METHODS_DECLARATIONS)
 
-    Tensor Mul(Tensor& other);
-    Tensor Mul(const Scalar& other) const;
-
-    Tensor Div(Tensor& other);
-    Tensor Div(const Scalar& other) const;
-
-    Tensor Pow(Tensor& other);
-    Tensor Pow(const Scalar& other) const;
-
-    Tensor Neg();
-    Tensor Exp();
-    Tensor Log();
-    Tensor Sqrt();
-
-
-    // Tensor<T>& operator+=(const Tensor<T>& rhs);
-    // Tensor<T> operator+(const Tensor<T>& rhs);
+    TENSOR_POINTWISE_METHODS(POINTWISE_DECLARATIONS)
 };
 
 }

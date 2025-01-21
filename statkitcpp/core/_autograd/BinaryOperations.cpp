@@ -4,11 +4,20 @@
 
 namespace statkitcpp {
 
-Tensor AddFunction::Forward(Tensor& lhs, Tensor& rhs, const Scalar& alpha) {
+Tensor AddFunction::Forward(Tensor& lhs, Tensor& rhs) {
     bool requires_grad = lhs.GetRequiresGrad() || rhs.GetRequiresGrad();
     lhs_ = &lhs;
     rhs_ = &rhs;
-    auto output = AddImpl(lhs, rhs, alpha);
+    auto output = AddImpl(lhs, rhs);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
+Tensor AddFunction::Forward(Tensor& lhs, const Scalar& rhs) {
+    bool requires_grad = lhs.GetRequiresGrad();
+    lhs_ = &lhs;
+    rhs_ = nullptr;
+    auto output = AddImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
@@ -30,7 +39,7 @@ void AddFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tens
         }
         lhs_->Backward(dlhs, output);
     }
-    if (rhs_->GetRequiresGrad()) {
+    if (rhs_ != nullptr && rhs_->GetRequiresGrad()) {
         auto drhs = grad_output;
 
         auto grad_dim = grad_output.GetNDim();
@@ -54,11 +63,20 @@ std::string AddFunction::GetName() const {
 
 
 
-Tensor SubFunction::Forward(Tensor& lhs, Tensor& rhs, const Scalar& alpha) {
+Tensor SubFunction::Forward(Tensor& lhs, Tensor& rhs) {
     bool requires_grad = lhs.GetRequiresGrad() || rhs.GetRequiresGrad();
     lhs_ = &lhs;
     rhs_ = &rhs;
-    auto output = SubImpl(lhs, rhs, alpha);
+    auto output = SubImpl(lhs, rhs);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
+Tensor SubFunction::Forward(Tensor& lhs, const Scalar& rhs) {
+    bool requires_grad = lhs.GetRequiresGrad();
+    lhs_ = &lhs;
+    rhs_ = nullptr;
+    auto output = SubImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
@@ -80,7 +98,7 @@ void SubFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tens
         }
         lhs_->Backward(dlhs, output);
     }
-    if (rhs_->GetRequiresGrad()) {
+    if (rhs_ != nullptr && rhs_->GetRequiresGrad()) {
         auto drhs = NegImpl(grad_output);
 
         auto grad_dim = grad_output.GetNDim();
@@ -113,6 +131,15 @@ Tensor MulFunction::Forward(Tensor& lhs, Tensor& rhs) {
     return output;
 }
 
+Tensor MulFunction::Forward(Tensor& lhs, const Scalar& rhs) {
+    bool requires_grad = lhs.GetRequiresGrad();
+    lhs_ = &lhs;
+    rhs_ = nullptr;
+    auto output = MulImpl(lhs, rhs);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
 void MulFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
 }
 
@@ -131,6 +158,15 @@ Tensor DivFunction::Forward(Tensor& lhs, Tensor& rhs) {
     return output;
 }
 
+Tensor DivFunction::Forward(Tensor& lhs, const Scalar& rhs) {
+    bool requires_grad = lhs.GetRequiresGrad();
+    lhs_ = &lhs;
+    rhs_ = nullptr;
+    auto output = DivImpl(lhs, rhs);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
 void DivFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
 }
 
@@ -138,12 +174,19 @@ std::string DivFunction::GetName() const {
     return "DivFunction()";
 }
 
-
-
 Tensor PowFunction::Forward(Tensor& lhs, Tensor& rhs) {
     bool requires_grad = lhs.GetRequiresGrad() || rhs.GetRequiresGrad();
     lhs_ = &lhs;
     rhs_ = &rhs;
+    auto output = PowImpl(lhs, rhs);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
+Tensor PowFunction::Forward(Tensor& lhs, const Scalar& rhs) {
+    bool requires_grad = lhs.GetRequiresGrad();
+    lhs_ = &lhs;
+    rhs_ = nullptr;
     auto output = PowImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;

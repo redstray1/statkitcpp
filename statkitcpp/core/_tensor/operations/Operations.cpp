@@ -27,11 +27,29 @@ Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op) {
     return output;
 }
 
-Tensor AddImpl(const Tensor& lhs, const Tensor& rhs, [[maybe_unused]]const Scalar& alpha = 1) {
+template <typename BinaryOperation>
+Tensor ApplyBinaryOp(const Tensor& lhs, const Scalar& rhs, BinaryOperation op) {
+    ScalarType output_type = PromoteTypes(lhs.GetDType(), rhs.Type());
+    Tensor output(lhs.GetShape(), output_type);
+
+    ops::scalar_op(lhs.GetDataPointer(), lhs.GetDType(), output.GetSize(),
+                   rhs, output.GetDataPointer(), output_type, op);
+    return output;
+}
+
+Tensor AddImpl(const Tensor& lhs, const Tensor& rhs) {
     return ApplyBinaryOp(lhs, rhs, std::plus());
 }
 
-Tensor SubImpl(const Tensor& lhs, const Tensor& rhs, [[maybe_unused]]const Scalar& alpha = 1) {
+Tensor AddImpl(const Tensor& lhs, const Scalar& rhs) {
+    return ApplyBinaryOp(lhs, rhs, std::plus());
+}
+
+Tensor SubImpl(const Tensor& lhs, const Tensor& rhs) {
+    return ApplyBinaryOp(lhs, rhs, std::minus());
+}
+
+Tensor SubImpl(const Tensor& lhs, const Scalar& rhs) {
     return ApplyBinaryOp(lhs, rhs, std::minus());
 }
 
@@ -39,11 +57,23 @@ Tensor MulImpl(const Tensor& lhs, const Tensor& rhs) {
     return ApplyBinaryOp(lhs, rhs, std::multiplies());
 }
 
+Tensor MulImpl(const Tensor& lhs, const Scalar& rhs) {
+    return ApplyBinaryOp(lhs, rhs, std::multiplies());
+}
+
 Tensor DivImpl(const Tensor& lhs, const Tensor& rhs) {
     return ApplyBinaryOp(lhs, rhs, std::divides());
 }
 
+Tensor DivImpl(const Tensor& lhs, const Scalar& rhs) {
+    return ApplyBinaryOp(lhs, rhs, std::divides());
+}
+
 Tensor PowImpl(const Tensor& lhs, const Tensor& rhs) {
+    return ApplyBinaryOp(lhs, rhs, func::pow());
+}
+
+Tensor PowImpl(const Tensor& lhs, const Scalar& rhs) {
     return ApplyBinaryOp(lhs, rhs, func::pow());
 }
 

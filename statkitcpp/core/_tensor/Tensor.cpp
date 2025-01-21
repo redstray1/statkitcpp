@@ -53,6 +53,11 @@ Tensor::Tensor(Tensor&& other) {
     requires_grad_ = std::move(other.requires_grad_);
 }
 
+Tensor& Tensor::operator=(const Scalar& other) && {
+    *this = Full(GetShape(), other, other.Type());
+    return *this;
+}
+
 // Constructors END------------------------------------------------------------
 
 std::string Tensor::GetTypeName() const {
@@ -87,102 +92,10 @@ void Tensor::Backward(std::optional<Tensor> grad_output, std::optional<Tensor> o
     if (grad == nullptr) {
         grad = std::make_shared<Tensor>(Zeros(GetShape()));
     }
-    *grad = AddImpl(*grad, grad_output.value(), 1);
+    *grad = AddImpl(*grad, grad_output.value());
     if (grad_fn != nullptr) {
         grad_fn->Backward(*grad, *this);
     }
-}
-
-//Aggregation operations
-Tensor Tensor::Sum(int dim, bool keepdims) {
-    auto op = std::make_shared<SumFunction>();
-    auto result = op->Forward(*this, dim, keepdims);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Prod(int dim, bool keepdims) {
-    auto op = std::make_shared<ProdFunction>();
-    auto result = op->Forward(*this, dim, keepdims);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Mean(int dim, bool keepdims) {
-    auto op = std::make_shared<MeanFunction>();
-    auto result = op->Forward(*this, dim, keepdims);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Var(int dim, bool keepdims) {
-    auto op = std::make_shared<VarFunction>();
-    auto result = op->Forward(*this, dim, keepdims);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Add(Tensor& other, const Scalar& alpha) {
-    auto op = std::make_shared<AddFunction>();
-    auto result = op->Forward(*this, other, alpha);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Sub(Tensor& other, const Scalar& alpha) {
-    auto op = std::make_shared<SubFunction>();
-    auto result = op->Forward(*this, other, alpha);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Mul(Tensor& other) {
-    auto op = std::make_shared<MulFunction>();
-    auto result = op->Forward(*this, other);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Div(Tensor& other) {
-    auto op = std::make_shared<DivFunction>();
-    auto result = op->Forward(*this, other);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Pow(Tensor& other) {
-    auto op = std::make_shared<PowFunction>();
-    auto result = op->Forward(*this, other);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Neg() {
-    auto op = std::make_shared<NegFunction>();
-    auto result = op->Forward(*this);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Exp() {
-    auto op = std::make_shared<ExpFunction>();
-    auto result = op->Forward(*this);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Log() {
-    auto op = std::make_shared<LogFunction>();
-    auto result = op->Forward(*this);
-    result.grad_fn = op;
-    return result;
-}
-
-Tensor Tensor::Sqrt() {
-    auto op = std::make_shared<SqrtFunction>();
-    auto result = op->Forward(*this);
-    result.grad_fn = op;
-    return result;
 }
 
 Tensor Tensor::Reshape(const std::vector<size_t>& shape) {

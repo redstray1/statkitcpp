@@ -1,4 +1,5 @@
 #include "../ScalarType.h"
+#include "../Scalar.h"
 #include "../shape.h"
 #include "errors.h"
 #include <vector>
@@ -76,6 +77,35 @@ void binary_op_(Out* data1, const std::vector<size_t>& shape1, const std::vector
     }
 }
 
+
+template <typename Out, typename T, typename Func>
+void scalar_op_(T* data1, size_t outsize, //NOLINT
+                Scalar data2,
+                Out* out, Func func) {
+    for (size_t output_index = 0; output_index < outsize; output_index++) {
+        out[output_index] = func(static_cast<T>(data1[output_index]), data2.to<Out>());
+    }
+}
+
+template <typename Out, typename Func>
+void temp_scalar_op(void* data1, ScalarType dtype1, size_t outsize, //NOLINT
+                Scalar data2,
+                Out* out, Func func) {
+    #define DEFINE_TYPE(U, name) \
+    case (ScalarType::name): \
+        scalar_op_(static_cast<U*>(data1), outsize, \
+                   data2, \
+                   out, func); \
+        break;
+    switch(dtype1) {
+        SCALAR_TYPES(DEFINE_TYPE)
+        default:
+            throw InvalidDatatypeError{};
+    }
+    #undef DEFINE_TYPE
+}
+
+
 template <typename T, typename Func>
 void temp_binary_op(T* data1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, size_t outsize, //NOLINT
                     void* data2, ScalarType dtype2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2,
@@ -108,6 +138,26 @@ void binary_op(void* data1, ScalarType dtype1, const std::vector<size_t>& shape1
                 temp_binary_op(static_cast<T*>(data2), shape2, strides2, outsize, \
                                data1, dtype1, shape1, strides1, \
                                static_cast<T*>(out), out_strides, func); \
+            } \
+            break; \
+        }
+        switch(dtype) {
+            SCALAR_TYPES(DEFINE_DTYPE_LHS)
+            default:
+                throw InvalidDatatypeError{};
+        }
+        #undef DEFINE_DTYPE_LHS
+}
+
+template <typename Func>
+void scalar_op(void* data1, ScalarType dtype1, size_t outsize, //NOLINT
+               Scalar data2, void* out, ScalarType dtype, Func func) {
+        #define DEFINE_DTYPE_LHS(T, name) \
+        case (ScalarType::name): { \
+            if (dtype1 == dtype) { \
+                scalar_op_(static_cast<T*>(data1), outsize, data2, static_cast<T*>(out), func); \
+            } else if (data2.Type() == dtype) { \
+                temp_scalar_op(data1, dtype1, outsize, data2, static_cast<T*>(out), func); \
             } \
             break; \
         }

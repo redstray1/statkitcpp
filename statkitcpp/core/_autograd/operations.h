@@ -14,7 +14,8 @@ private:
 public:
     AddFunction() = default;
     ~AddFunction() {}
-    Tensor Forward(Tensor& lhs, Tensor& rhs, const Scalar& alpha);
+    Tensor Forward(Tensor& lhs, Tensor& rhs);
+    Tensor Forward(Tensor& lhs, const Scalar& rhs);
     void Backward(const Tensor& grad_output, const Tensor& output) override;
     std::string GetName() const override;
 };
@@ -26,7 +27,8 @@ private:
 public:
     SubFunction() = default;
     ~SubFunction() {}
-    Tensor Forward(Tensor& lhs, Tensor& rhs, const Scalar& alpha);
+    Tensor Forward(Tensor& lhs, Tensor& rhs);
+    Tensor Forward(Tensor& lhs, const Scalar& rhs);
     void Backward(const Tensor& grad_output, const Tensor& output) override;
     std::string GetName() const override;
 };
@@ -39,6 +41,7 @@ public:
     MulFunction() = default;
     ~MulFunction() {}
     Tensor Forward(Tensor& lhs, Tensor& rhs);
+    Tensor Forward(Tensor& lhs, const Scalar& rhs);
     void Backward(const Tensor& grad_output, const Tensor& output) override;
     std::string GetName() const override;
 };
@@ -51,6 +54,7 @@ public:
     DivFunction() = default;
     ~DivFunction() {}
     Tensor Forward(Tensor& lhs, Tensor& rhs);
+    Tensor Forward(Tensor& lhs, const Scalar& rhs);
     void Backward(const Tensor& grad_output, const Tensor& output) override;
     std::string GetName() const override;
 };
@@ -63,6 +67,7 @@ public:
     PowFunction() = default;
     ~PowFunction() {}
     Tensor Forward(Tensor& lhs, Tensor& rhs);
+    Tensor Forward(Tensor& lhs, const Scalar& rhs);
     void Backward(const Tensor& grad_output, const Tensor& output) override;
     std::string GetName() const override;
 };
