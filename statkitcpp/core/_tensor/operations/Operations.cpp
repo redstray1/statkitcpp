@@ -77,6 +77,18 @@ Tensor PowImpl(const Tensor& lhs, const Scalar& rhs) {
     return ApplyBinaryOp(lhs, rhs, func::pow());
 }
 
+Tensor DivDerivImpl(const Tensor& lhs, const Tensor& rhs) {
+    return ApplyBinaryOp(lhs, rhs, func::div_deriv());
+}
+
+Tensor PowDerivImpl(const Tensor& lhs, const Tensor& rhs) {
+    return ApplyBinaryOp(lhs, rhs, func::pow_deriv());
+}
+
+Tensor ExpDerivImpl(const Tensor& lhs, const Tensor& rhs) {
+    return ApplyBinaryOp(lhs, rhs, func::exp_deriv());
+}
+
 Tensor SumImpl(const Tensor &arg, int dim, bool keepdims) {
 
     if (arg.GetNDim() == 1) {

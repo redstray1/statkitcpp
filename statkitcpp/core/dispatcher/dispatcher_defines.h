@@ -16,18 +16,17 @@ TensorDispatcher name() const;
 
 #define DISPATCHER_AGGREGATION_DEFINITIONS(name, func, _) \
 TensorDispatcher TensorDispatcher::name(int dim, bool keepdims) const { \
-    auto var_ptr = tensor_->name(dim, keepdims); \
+    auto var_ptr = tensor_.name(dim, keepdims); \
     return TensorDispatcher(var_ptr); \
 }
 
 #define DISPATCHER_OPERATOR_METHODS_DEFINITIONS(op, name, func, _) \
 TensorDispatcher TensorDispatcher::name(const TensorDispatcher& other) const { \
-    auto var_ptr = tensor_->name(*other.tensor_); \
+    auto var_ptr = tensor_.name(other.tensor_); \
     return TensorDispatcher(var_ptr); \
 }\
 TensorDispatcher TensorDispatcher::name(const Scalar& other) const { \
-    auto var_ptr = tensor_->name(other); \
-    return TensorDispatcher(var_ptr); \
+    return TensorDispatcher(tensor_.name(other)); \
 }
 
 #define DISPATCHER_OPERATOR_DEFINITIONS(op, name, func, _) \
@@ -41,6 +40,5 @@ inline TensorDispatcher TensorDispatcher::operator op(const Scalar& other) const
 
 #define DISPATCHER_POINTWISE_DEFINITIONS(name, func, _) \
 TensorDispatcher TensorDispatcher::name() const { \
-    auto var_ptr = tensor_->name(); \
-    return TensorDispatcher(var_ptr); \
+    return TensorDispatcher(tensor_.name()); \
 }

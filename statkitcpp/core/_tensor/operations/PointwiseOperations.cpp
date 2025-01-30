@@ -28,4 +28,16 @@ Tensor SqrtImpl(const Tensor& arg) {
     return output;
 }
 
+Tensor SqrtDerivImpl(const Tensor& arg) {
+    Tensor output(arg.GetShape(), arg.GetDType());
+    ops::pointwise(arg.GetDataPointer(), output.GetSize(), output.GetDType(), func::sqrt_deriv(), output.GetDataPointer());
+    return output;
+}
+
+Tensor ReciprocalImpl(const Tensor& arg) {
+    Tensor output(arg.GetShape(), arg.GetDType());
+    ops::pointwise(arg.GetDataPointer(), output.GetSize(), output.GetDType(), func::reciprocal(), output.GetDataPointer());
+    return output;
+}
+
 }

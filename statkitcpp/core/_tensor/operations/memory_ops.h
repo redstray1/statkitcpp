@@ -183,7 +183,7 @@ void pointwise(void* data, size_t size, ScalarType type, Func func, void* out)  
         pointwise_(static_cast<T*>(data), size, func, static_cast<T*>(out)); \
         break;
     switch(type) {
-        SCALAR_TYPES(DEFINE_DTYPE)
+        SCALAR_TYPES_NOBOOL(DEFINE_DTYPE)
         default:
             throw InvalidDatatypeError{};
     }

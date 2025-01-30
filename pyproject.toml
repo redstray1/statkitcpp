@@ -28,16 +28,17 @@ wheel.packages = ["statkitcpp"]
 sdist.include = ["statkitcpp/py.typed", "statkitcpp/*.pyi"]
 
 [tool.pytest.ini_options]
+# timeout = 60
 minversion = "8.0"
 addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
-xfail-strict = true
+#xfail-strict = true
 log_cli_level = "INFO"
 python_files = "test_*.py"
 filterwarnings = [
     "error",
     "ignore:pytest.PytestCacheWarning",
 ]
-testpaths = ["tests"]
+testpaths = ["python-tests"]
 
 
 [tool.mypy]

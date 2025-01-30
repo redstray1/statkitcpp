@@ -29,6 +29,7 @@ void DeclareTensor(py::module& module) {
     cls.def_property_readonly("nbytes", &TensorDispatcher::GetNBytes);
     cls.def_property_readonly("dtype", &TensorDispatcher::GetDType);
     cls.def_property_readonly("strides", &TensorDispatcher::GetStrides);
+    cls.def_property_readonly("grad", &TensorDispatcher::GetGrad);
     cls.def_property("shape", &TensorDispatcher::GetShape, &TensorDispatcher::SetShape);
     cls.def_property("requires_grad", &TensorDispatcher::GetRequiresGrad, &TensorDispatcher::SetRequiresGrad);
     cls.def("broadcastable_to", &TensorDispatcher::BroadcastableTo, py::arg("other"));

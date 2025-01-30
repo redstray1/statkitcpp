@@ -8,3 +8,5 @@ statkitcpp/__pycache__
 howtocompile.md
 build_package.sh
 stubs/
+python-tests/tensors/__pycache__
+.pytest_cache

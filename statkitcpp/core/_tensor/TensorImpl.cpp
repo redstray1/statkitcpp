@@ -1,13 +1,19 @@
 #include "TensorImpl.h"
 #include "../errors.h"
+#include "Operations.h"
 #include "ScalarType.h"
+#include "Tensor.h"
 #include "shape.h"
+#include "tensor_creation_ops.h"
 #include <cstddef>
 #include <cassert>
 #include <sys/types.h>
 #include <functional>
 #include <initializer_list>
+#include <memory>
 #include <numeric>
+#include <iostream>
+#include <stdexcept>
 
 namespace statkitcpp {
 
@@ -21,7 +27,7 @@ TensorImpl::TensorImpl() {
     storage_ = Storage();
 }
 
-TensorImpl::TensorImpl(const std::vector<size_t>& shape, ScalarType dtype) {
+TensorImpl::TensorImpl(const std::vector<size_t>& shape, ScalarType dtype, bool requires_grad) {
     shape_ = shape;
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     strides_.resize(shape.size(), 1);
@@ -30,11 +36,13 @@ TensorImpl::TensorImpl(const std::vector<size_t>& shape, ScalarType dtype) {
         strides_[i] = strides_[i + 1] * shape[i + 1];
     }
     storage_ = Storage(size_ * ItemSize(dtype));
+    requires_grad_ = requires_grad;
 }
 
 TensorImpl::TensorImpl(void* data, 
                   const std::vector<size_t>& shape,
-                  ScalarType dtype) {
+                  ScalarType dtype,
+                  bool requires_grad) {
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     shape_ = shape;
     strides_.resize(shape.size(), 1);
@@ -43,11 +51,12 @@ TensorImpl::TensorImpl(void* data,
         strides_[i] = strides_[i + 1] * shape[i + 1];
     }
     storage_ = Storage(data, size_ * ItemSize(dtype));
+    requires_grad_ = requires_grad;
 }
 
 TensorImpl::TensorImpl(const Storage& storage,
                        const std::vector<size_t>& shape,
-                       ScalarType dtype) {
+                       ScalarType dtype, bool requires_grad) {
     size_ = std::reduce(shape.begin(), shape.end(), 1, std::multiplies());
     shape_ = shape;
     strides_.resize(shape.size(), 1);
@@ -56,6 +65,7 @@ TensorImpl::TensorImpl(const Storage& storage,
         strides_[i] = strides_[i + 1] * shape[i + 1];
     }
     storage_ = storage;
+    requires_grad_ = requires_grad;
 }
 
 // Constructors END------------------------------------------------------------
@@ -129,6 +139,11 @@ std::string TensorImpl::ToString() const {
     size_t index = 0;
     RecursiveToString(0, index, tensor_repr);
     std::string result = "Tensor(" + tensor_repr + ", shape=" + shape_repr + ", dtype=" + dtype_repr;
+    if (grad_fn != nullptr) {
+        result += ", grad_fn=";
+        result += grad_fn->GetName();
+    }
+    result += ")";
     return result;
 }
 
@@ -159,6 +174,36 @@ size_t TensorImpl::GetSize() const {
 
 size_t TensorImpl::GetNDim() const {
     return shape_.size();
+}
+
+size_t TensorImpl::GetDim(int dim) const {
+    if (dim < 0) {
+        dim += GetNDim();
+    }
+    return shape_[dim];
+}
+
+Tensor& TensorImpl::GetGrad() {
+    if (grad == nullptr) {
+        throw std::runtime_error{"Something strange happened, there is no .grad in this tensor"};
+    }
+    return *grad;
+}
+
+void TensorImpl::AddGrad(const Tensor& to_add) {
+    if (grad == nullptr) {
+        grad = std::make_shared<Tensor>(GetShape(), dtype_);
+        ops::zeros(*grad);
+    }
+    *grad = AddImpl(*grad, to_add);
+}
+
+std::shared_ptr<Node>& TensorImpl::GetAutogradNode() {
+    if (autograd_node_ == nullptr) {
+        autograd_node_ = std::make_shared<Node>(weak_from_this(), nullptr);
+        // std::cout << "Created node " << autograd_node_ << std::endl;
+    }
+    return autograd_node_;
 }
 
 // TensorImpl class implementation END-----------------------------------------------------

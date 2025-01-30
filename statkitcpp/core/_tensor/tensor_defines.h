@@ -24,59 +24,59 @@
 
 
 #define OPERATOR_METHODS_DECLARATIONS(op, name, func, _) \
-    Tensor name(Tensor& other); \
-    Tensor name(const Scalar& other); \
+    Tensor name(const Tensor& other) const; \
+    Tensor name(const Scalar& other) const; \
 
 #define OPERATOR_DECLARATIONS(op, name, func, _) \
-    inline Tensor operator op(Tensor& other); \
-    inline Tensor operator op(const Scalar& other);
+    inline Tensor operator op(const Tensor& other) const; \
+    inline Tensor operator op(const Scalar& other) const;
 
 
 
 #define OPERATOR_METHODS_DEFINITIONS(op, name, func, _) \
-Tensor Tensor::name(Tensor& other) { \
+Tensor Tensor::name(const Tensor& other) const { \
     auto operation = std::make_shared<func>(); \
     auto result = operation->Forward(*this, other); \
-    result.grad_fn = operation; \
+    result.impl_->grad_fn = operation; \
     return result; \
 } \
 \
-Tensor Tensor::name(const Scalar& other) { \
+Tensor Tensor::name(const Scalar& other) const { \
     auto operation = std::make_shared<func>(); \
     auto result = operation->Forward(*this, other); \
-    result.grad_fn = operation; \
+    result.impl_->grad_fn = operation; \
     return result; \
 } \
 
 #define OPERATORS_DEFINITIONS(op, name, func, _) \
-inline Tensor Tensor::operator op(Tensor& other) { \
+inline Tensor Tensor::operator op(const Tensor& other) const { \
     return name(other); \
 } \
-inline Tensor Tensor::operator op(const Scalar& other) { \
+inline Tensor Tensor::operator op(const Scalar& other) const { \
     return name(other); \
 }
 
 
 
 #define AGGREGATION_DECLARATIONS(name, func, _) \
-Tensor name(int dim = -1, bool keepdims = false);
+Tensor name(int dim = -1, bool keepdims = false) const;
 
 #define AGGREGATION_DEFINITIONS(name, func, _) \
-Tensor Tensor::name(int dim, bool keepdims) { \
+Tensor Tensor::name(int dim, bool keepdims) const { \
     auto op = std::make_shared<func>(); \
     auto result = op->Forward(*this, dim, keepdims); \
-    result.grad_fn = op; \
+    result.impl_->grad_fn = op; \
     return result; \
 }
 
 
 #define POINTWISE_DECLARATIONS(name, func, _) \
-Tensor name();
+Tensor name() const;
 
 #define POINTWISE_DEFINITIONS(name, func, _) \
-Tensor Tensor::name() { \
+Tensor Tensor::name() const { \
     auto op = std::make_shared<func>(); \
     auto result = op->Forward(*this); \
-    result.grad_fn = op; \
+    result.impl_->grad_fn = op; \
     return result; \
 }

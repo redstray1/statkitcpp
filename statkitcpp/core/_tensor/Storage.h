@@ -18,12 +18,16 @@ private:
     size_t size_bytes_;
 public:
     Storage(size_t n_bytes) { data_ptr_ = malloc(n_bytes); size_bytes_ = n_bytes; }
-    Storage(void* data_ptr, size_t n_bytes) : data_ptr_(data_ptr), size_bytes_(n_bytes) {}
+    Storage(void* data_ptr, size_t n_bytes) : size_bytes_(n_bytes) {
+        data_ptr_ = malloc(size_bytes_);
+        memcpy(data_ptr_, data_ptr, size_bytes_);
+    }
     Storage& operator=(const Storage& other) {
         if (this == &other) {
             return *this;
         }
         size_bytes_ = other.size_bytes_;
+        ClearData();
         data_ptr_ = malloc(size_bytes_);
         memcpy(data_ptr_, other.data_ptr_, size_bytes_);
         return *this;

@@ -1,10 +1,10 @@
 import numpy as np
 import statkitcpp as skpp
 
-aa = np.eye(5, dtype=np.int8)
-
-a = skpp.Tensor(aa)
-print(a.dtype, aa.dtype)
-print(a.strides, a.shape, a.size)
-print(a.sum(1), aa.sum(axis=1))
-print(np.array(a.sum()) == np.sum(aa, axis=-1))
+for _ in range(10):
+    a = np.random.random((5, 1))
+    b = np.random.random((1, 5))
+    a1 = skpp.Tensor(a)
+    b1 = skpp.Tensor(b)
+    assert np.allclose(np.array(a1.exp()), np.exp(a))
+    assert np.allclose(np.array(a1 + b1), a + b)

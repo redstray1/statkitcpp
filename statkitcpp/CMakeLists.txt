@@ -4,6 +4,7 @@ add_library(libcore STATIC
     core/_tensor/TensorOperations.cpp
     core/_tensor/shape.cpp
     core/_autograd/autograd.cpp
+    core/_autograd/Node.cpp
     core/_autograd/TensorOperations.cpp
     core/_autograd/BinaryOperations.cpp
     core/_autograd/PointwiseOperations.cpp

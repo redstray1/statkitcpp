@@ -26,6 +26,11 @@ Tensor DivImpl(const Tensor& lhs, const Scalar& rhs);
 Tensor PowImpl(const Tensor& lhs, const Tensor& rhs);
 Tensor PowImpl(const Tensor& lhs, const Scalar& rhs);
 
+//Binary derivation
+Tensor DivDerivImpl(const Tensor& lhs, const Tensor& rhs);
+Tensor PowDerivImpl(const Tensor& lhs, const Tensor& rhs);
+Tensor ExpDerivImpl(const Tensor& lhs, const Tensor& rhs);
+
 //Aggregation operations
 Tensor SumImpl(const Tensor& arg, int dim, bool keepdims);
 Tensor ProdImpl(const Tensor& arg, int dim, bool keepdims);
@@ -39,6 +44,10 @@ Tensor NegImpl(const Tensor& arg);
 Tensor ExpImpl(const Tensor& arg);
 Tensor LogImpl(const Tensor& arg);
 Tensor SqrtImpl(const Tensor& arg);
+Tensor ReciprocalImpl(const Tensor& arg);
+
+//Pointwise derivatives
+Tensor SqrtDerivImpl(const Tensor& arg);
 
 //Tensor operations
 Tensor ReshapeImpl(const Tensor& arg, const std::vector<size_t>& shape);

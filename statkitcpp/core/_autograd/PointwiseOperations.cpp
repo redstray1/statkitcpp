@@ -5,67 +5,116 @@
 
 namespace statkitcpp {
 
-Tensor NegFunction::Forward(Tensor& arg) {
+Tensor NegFunction::Forward(const Tensor& arg) {
     bool requires_grad = arg.GetRequiresGrad();
-    arg_ = &arg;
+    arg_ = arg.GetImpl();
     auto output = NegImpl(arg);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
 
-void NegFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
+std::vector<Tensor> NegFunction::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> dargs(1);
+    if (arg_->GetRequiresGrad()) {
+        Tensor darg = NegImpl(grad_output);
+        dargs[0] = darg;
+    }
+    return dargs;
 }
 
 std::string NegFunction::GetName() const {
     return "NegFunction()";
 }
 
+std::vector<std::shared_ptr<TensorImpl>> NegFunction::GetChildren() {
+    return {arg_};
+}
 
 
-Tensor ExpFunction::Forward(Tensor& arg) {
+Tensor ExpFunction::Forward(const Tensor& arg) {
     bool requires_grad = arg.GetRequiresGrad();
-    arg_ = &arg;
+    arg_ = arg.GetImpl();
     auto output = ExpImpl(arg);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
 
-void ExpFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
+std::vector<Tensor> ExpFunction::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> dargs(1);
+    if (arg_->GetRequiresGrad()) {
+        Tensor darg = ExpImpl(Tensor(arg_));
+        darg = MulImpl(darg, grad_output);
+        dargs[0] = darg;
+    }
+    return dargs;
 }
 
 std::string ExpFunction::GetName() const {
     return "ExpFunction()";
 }
 
+std::vector<std::shared_ptr<TensorImpl>> ExpFunction::GetChildren() {
+    return {arg_};
+}
 
-Tensor LogFunction::Forward(Tensor& arg) {
+
+
+
+Tensor LogFunction::Forward(const Tensor& arg) {
     bool requires_grad = arg.GetRequiresGrad();
-    arg_ = &arg;
+    arg_ = arg.GetImpl();
     auto output = LogImpl(arg);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
 
-void LogFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
+std::vector<Tensor> LogFunction::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> dargs(1);
+    if (arg_->GetRequiresGrad()) {
+        Tensor darg = ReciprocalImpl(Tensor(arg_));
+        darg = MulImpl(darg, grad_output);
+        dargs[0] = darg;
+    }
+    return dargs;
 }
 
 std::string LogFunction::GetName() const {
     return "LogFunction()";
 }
 
-Tensor SqrtFunction::Forward(Tensor& arg) {
+std::vector<std::shared_ptr<TensorImpl>> LogFunction::GetChildren() {
+    return {arg_};
+}
+
+
+
+Tensor SqrtFunction::Forward(const Tensor& arg) {
     bool requires_grad = arg.GetRequiresGrad();
-    arg_ = &arg;
+    arg_ = arg.GetImpl();
     auto output = SqrtImpl(arg);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
 
-void SqrtFunction::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
+std::vector<Tensor> SqrtFunction::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> dargs(1);
+    if (arg_->GetRequiresGrad()) {
+        Tensor darg = SqrtDerivImpl(Tensor(arg_));
+        darg = MulImpl(darg, grad_output);
+        dargs[0] = darg;
+    }
+    return dargs;
 }
 
 std::string SqrtFunction::GetName() const {
     return "SqrtFunction()";
 }
+
+std::vector<std::shared_ptr<TensorImpl>> SqrtFunction::GetChildren() {
+    return {arg_};
+}
+
+
+
 
 }

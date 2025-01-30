@@ -4,6 +4,7 @@
 #include "Storage.h"
 #include "TensorCreationOps.h"
 #include "ScalarType.h"
+#include "autograd.h"
 #include "shape.h"
 #include "TensorImpl.h"
 #include <cstddef>
@@ -21,39 +22,32 @@ Tensor::Tensor() {
 }
 
 Tensor::Tensor(const std::vector<size_t>& shape, ScalarType dtype, bool requires_grad) {
-    impl_ = std::make_shared<TensorImpl>(shape,  dtype);
-    requires_grad_ = requires_grad;
+    impl_ = std::make_shared<TensorImpl>(shape,  dtype, requires_grad);
 }
 
 Tensor::Tensor(void* data, 
                const std::vector<size_t>& shape,
                ScalarType dtype,
                bool requires_grad) {
-    impl_ = std::make_shared<TensorImpl>(data, shape, dtype);
-    requires_grad_ = requires_grad;
+    impl_ = std::make_shared<TensorImpl>(data, shape, dtype, requires_grad);
 }
 
 Tensor::Tensor(const Storage& storage,
                const std::vector<size_t>& shape,
                ScalarType dtype,
                bool requires_grad) {
-    impl_ = std::make_shared<TensorImpl>(storage, shape, dtype);
-    requires_grad_ = requires_grad;
+    impl_ = std::make_shared<TensorImpl>(storage, shape, dtype, requires_grad);
 }
 
 Tensor::Tensor(const Tensor& other) {
     impl_ = other.impl_;
-    grad_fn = other.grad_fn;
-    requires_grad_ = other.requires_grad_;
 }
 
 Tensor::Tensor(Tensor&& other) {
     impl_ = std::move(other.impl_);
-    grad_fn = std::move(other.grad_fn);
-    requires_grad_ = std::move(other.requires_grad_);
 }
 
-Tensor& Tensor::operator=(const Scalar& other) && {
+Tensor& Tensor::operator=(const Scalar& other) {
     *this = Full(GetShape(), other, other.Type());
     return *this;
 }
@@ -66,11 +60,6 @@ std::string Tensor::GetTypeName() const {
 
 std::string Tensor::ToString() const {
     auto repr = impl_->ToString();
-    if (grad_fn != nullptr) {
-        repr += ", grad_fn=";
-        repr += grad_fn->GetName();
-    }
-    repr += ")";
     return repr;
 }
 
@@ -82,26 +71,22 @@ bool Tensor::BroadcastableTo(const Tensor& other) {
     return IsBroadcastable(GetShape(), other.GetShape());
 }
 
-void Tensor::Backward(std::optional<Tensor> grad_output, std::optional<Tensor> output, bool retain_graph) {
-    if (!requires_grad_) {
+void Tensor::Backward(std::optional<Tensor> grad_output, [[maybe_unused]]std::optional<Tensor> output, bool retain_graph)& {
+    if (!GetRequiresGrad()) {
         return;
     }
     if (!grad_output.has_value()) {
         grad_output = Ones(GetShape());
     }
-    if (grad == nullptr) {
-        grad = std::make_shared<Tensor>(Zeros(GetShape()));
-    }
-    *grad = AddImpl(*grad, grad_output.value());
-    if (grad_fn != nullptr) {
-        grad_fn->Backward(*grad, *this);
-    }
+    auto node = impl_->GetAutogradNode();
+    assert(node == impl_->autograd_node_);
+    RunBackward(node, grad_output, retain_graph);
 }
 
 Tensor Tensor::Reshape(const std::vector<size_t>& shape) {
     auto op = std::make_shared<ReshapeOperation>();
     auto result = op->Forward(*this, shape);
-    result.grad_fn = op;
+    result.impl_->grad_fn = op;
     return result;
 }
 

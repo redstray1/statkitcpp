@@ -4,22 +4,30 @@
 
 namespace statkitcpp {
 
-Tensor ReshapeOperation::Forward(Tensor& arg, const std::vector<size_t>& shape) {
+Tensor ReshapeOperation::Forward(const Tensor& arg, const std::vector<size_t>& shape) {
     bool requires_grad = arg.GetRequiresGrad();
-    arg_ = &arg;
+    arg_ = arg.GetImpl();
     auto output = ReshapeImpl(arg, shape);
     output.SetRequiresGrad(requires_grad);
     return output;
 }
 
-void ReshapeOperation::Backward(const Tensor& grad_output, [[maybe_unused]]const Tensor& output) {
+std::vector<Tensor> ReshapeOperation::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> input_grads(1);
     if (arg_->GetRequiresGrad()) {
         auto darg = ReshapeImpl(grad_output, arg_->GetShape());
-        arg_->Backward(darg, output);
+        input_grads[0] = darg;
     }
+    return input_grads;
 }
 
 std::string ReshapeOperation::GetName() const {
     return "ReshapeOperation()";
 }
+
+std::vector<std::shared_ptr<TensorImpl>> ReshapeOperation::GetChildren() {
+    return {arg_};
+}
+
+
 }

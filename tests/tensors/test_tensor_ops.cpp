@@ -12,7 +12,6 @@ TEST_CASE("Reshape operation") {
         Tensor a = Arange(0, 5);
         Tensor c = a.Reshape({5, 1});
         CHECK(c.GetDType() == kFloat32);
-        std::cout << c.ToString();
     }
 }
 

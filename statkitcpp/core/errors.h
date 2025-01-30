@@ -50,4 +50,10 @@ public:
         : std::out_of_range{"Index " + std::to_string(dim_index) + " out of bounds for the given dimension " + std::to_string(dim)}{
     }
 };
+class InputsAndGradMismatchError : public std::runtime_error {
+public:
+    explicit InputsAndGradMismatchError(size_t input_size, size_t grad_size)
+        : std::runtime_error{"Mismatch number of inputs=" + std::to_string(input_size) + " and number of resulting gradients=" + std::to_string(grad_size) + " during backward."}{
+    }
+};
 #endif

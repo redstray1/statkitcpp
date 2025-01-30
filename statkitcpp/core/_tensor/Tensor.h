@@ -21,9 +21,10 @@ namespace statkitcpp {
 class Tensor {
 friend class TensorDispatcher;
 friend class TensorImpl;
+friend class TensorBody;
 private:
+
     std::shared_ptr<TensorImpl> impl_;
-    bool requires_grad_ = false;
 
     std::string GetTypeName() const;
     size_t GetFlatIndex(const std::vector<size_t>& indexes) const {
@@ -33,13 +34,14 @@ private:
         return impl_->GetIndexesFromFlat(flat_index);
     }
     
-    template <typename BinaryOperation>
-    friend Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op);
+    // template <typename BinaryOperation>
+    // friend Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op);
 public:
-    std::shared_ptr<GradFunction> grad_fn = nullptr;
-    std::shared_ptr<Tensor> grad = nullptr;
+    // std::shared_ptr<GradFunction> grad_fn = nullptr;
+    // std::shared_ptr<Tensor> grad = nullptr;
 
     Tensor();
+    explicit Tensor(std::shared_ptr<TensorImpl> impl) : impl_(impl) {}
     explicit Tensor(const std::vector<size_t>& shape,
                     ScalarType dtype = kFloat32,
                     bool requires_grad = false);
@@ -58,7 +60,7 @@ public:
     Tensor& operator=(const Tensor& other) = default;
     Tensor& operator=(Tensor&& other) = default;
 
-    Tensor& operator=(const Scalar& other) &&;
+    Tensor& operator=(const Scalar& other);
 
     Tensor ToType(ScalarType t) const;
 
@@ -74,9 +76,9 @@ public:
     size_t GetSize() const { return impl_->GetSize(); };
     size_t GetNDim() const { return impl_->GetNDim(); };
 
-    void SetRequiresGrad(bool requires_grad) { requires_grad_ = requires_grad; };
-    bool GetRequiresGrad() const { return requires_grad_; };
-    bool IsLeaf() const { return grad_fn == nullptr; }
+    void SetRequiresGrad(bool requires_grad) { impl_->SetRequiresGrad(requires_grad); };
+    bool GetRequiresGrad() const { return impl_->GetRequiresGrad(); };
+    bool IsLeaf() const { return impl_->IsLeaf(); }
 
     void* GetDataPointer()  { return impl_->GetDataPointer(); }
     void* GetDataPointer() const  { return impl_->GetDataPointer(); }
@@ -85,16 +87,13 @@ public:
     size_t GetItemSize() const  { return impl_->GetItemSize(); }
     size_t GetNBytes() const  { return impl_->GetNBytes(); }
 
-    Tensor& GetGrad() { 
-        if (grad == nullptr) {
-            throw std::runtime_error{"There is no grad in this tensor"};
-        }
-        return *grad;
-    }
+    Tensor& GetGrad() const { return impl_->GetGrad(); }
+    std::shared_ptr<TensorImpl> GetImpl() const { return impl_; }
+
 
     bool BroadcastableTo(const Tensor& other);
 
-    void Backward(std::optional<Tensor> grad_output = std::nullopt, std::optional<Tensor> output = std::nullopt, bool retain_graph=false);
+    void Backward(std::optional<Tensor> grad_output = std::nullopt, std::optional<Tensor> output = std::nullopt, bool retain_graph=false) &;
 
     TENSOR_AGGREGATION_METHODS(AGGREGATION_DECLARATIONS)
 
