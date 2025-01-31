@@ -15,4 +15,14 @@ Tensor ReshapeImpl(const Tensor &arg, const std::vector<size_t>& shape) {
     return output;
 }
 
+Tensor UnsqueezeImpl(const Tensor &arg, int dim) {
+    auto shape = arg.GetShape();
+    if (dim < 0) {
+        dim += arg.GetNDim();
+    }
+    shape.insert(shape.begin() + dim, 1);
+    Tensor output(arg.GetStorage(), shape, arg.GetDType());
+    return output;
+}
+
 }

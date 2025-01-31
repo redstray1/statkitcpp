@@ -1,4 +1,3 @@
-
 import pytest
 import dataclasses
 import typing as tp
@@ -16,7 +15,9 @@ TEST_CASES = [
     Case(a_shape=(5, 5, 5), b_shape=(1, 1, 5)),
     Case(a_shape=(1, 4, 2), b_shape=(1, 1)),
     Case(a_shape=(4, 2, 4), b_shape=(2, 4)),
-    Case(a_shape=(1,2,3,5), b_shape=(2,1,5))
+    Case(a_shape=(1,2,3,5), b_shape=(2,1,5)),
+    Case(a_shape=(15,3,5), b_shape=(3,5)),
+    Case(a_shape=(8,1,6,1),b_shape=(7,1,5))
 ]
 
 @pytest.mark.parametrize('t', TEST_CASES, ids=str)

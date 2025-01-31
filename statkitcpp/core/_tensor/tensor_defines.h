@@ -49,10 +49,10 @@ Tensor Tensor::name(const Scalar& other) const { \
 } \
 
 #define OPERATORS_DEFINITIONS(op, name, func, _) \
-inline Tensor Tensor::operator op(const Tensor& other) const { \
+inline Tensor operator op(const Tensor& other) const { \
     return name(other); \
 } \
-inline Tensor Tensor::operator op(const Scalar& other) const { \
+inline Tensor operator op(const Scalar& other) const { \
     return name(other); \
 }
 

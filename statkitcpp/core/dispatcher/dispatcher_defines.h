@@ -1,6 +1,6 @@
 #define DISPATCHER_OPERATOR_METHODS_DECLARATIONS(op, name, func, _) \
     TensorDispatcher name(const TensorDispatcher& other) const; \
-    TensorDispatcher name(const Scalar& other) const; \
+    TensorDispatcher name(const Scalar& other) const;
 
 #define DISPATCHER_OPERATOR_DECLARATIONS(op, name, func, _) \
     inline TensorDispatcher operator op(const TensorDispatcher& other) const; \
@@ -16,14 +16,12 @@ TensorDispatcher name() const;
 
 #define DISPATCHER_AGGREGATION_DEFINITIONS(name, func, _) \
 TensorDispatcher TensorDispatcher::name(int dim, bool keepdims) const { \
-    auto var_ptr = tensor_.name(dim, keepdims); \
-    return TensorDispatcher(var_ptr); \
+    return TensorDispatcher(tensor_.name(dim, keepdims)); \
 }
 
 #define DISPATCHER_OPERATOR_METHODS_DEFINITIONS(op, name, func, _) \
 TensorDispatcher TensorDispatcher::name(const TensorDispatcher& other) const { \
-    auto var_ptr = tensor_.name(other.tensor_); \
-    return TensorDispatcher(var_ptr); \
+    return TensorDispatcher(tensor_.name(other.tensor_)); \
 }\
 TensorDispatcher TensorDispatcher::name(const Scalar& other) const { \
     return TensorDispatcher(tensor_.name(other)); \

@@ -37,7 +37,7 @@ void RunBackward(const std::shared_ptr<Node>& root, std::optional<Tensor> grad_o
     
     GraphTopSort(root, topsort, used);
     if (grad_output.has_value()) {
-        //std::cout << "Add grad_output for root " << root << std::endl;
+        // std::cout << "Add grad_output for root " << root << std::endl;
         root->AddGrad(grad_output.value());
     }
     //return;

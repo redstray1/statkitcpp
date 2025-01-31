@@ -2,13 +2,14 @@ import statkitcpp as skpp
 import numpy as np
 import sys
 
-a = np.random.random((5, 1))
+a = skpp.full(shape=[1,1], value=0.0762168)
+b = skpp.full(shape=[1], value=0.06522323)
 
-a1 = skpp.Tensor(a)
+a.requires_grad = True
+b.requires_grad = True
 
-a = np.random.random((5, 1))
+c = a / b
 
-a1 = skpp.Tensor(a)
-print(a1.__class__, a1.size, a1.dtype, a1.ndim, a1.itemsize, a1.nbytes, a1.__repr__)
+c.backward()
 
-print(np.array(a1.exp()))
+print(a.grad)

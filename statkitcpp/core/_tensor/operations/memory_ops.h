@@ -43,7 +43,7 @@ namespace ops {
 template <typename Out, typename T, typename Func>
 void binary_op_(Out* data1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, size_t outsize, //NOLINT
                 T* data2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2,
-                Out* out, const std::vector<size_t>& out_strides, Func func) {
+                Out* out, const std::vector<size_t>& out_strides, Func func, bool inverted=false) {
     for (size_t output_index = 0; output_index < outsize; output_index++) {
         size_t lhs_index = 0;
         size_t rhs_index = 0;
@@ -73,7 +73,12 @@ void binary_op_(Out* data1, const std::vector<size_t>& shape1, const std::vector
                 rhs_index += rhs_dim_idx * strides2[rhs_dim];
             }
         }
-        out[output_index] = func(data1[lhs_index], static_cast<Out>(data2[rhs_index]));
+        if (!inverted) {
+            out[output_index] = func(data1[lhs_index], static_cast<Out>(data2[rhs_index]));
+        } else {
+            out[output_index] = func(static_cast<Out>(data2[rhs_index]), data1[lhs_index]);
+        }
+        
     }
 }
 
@@ -109,12 +114,12 @@ void temp_scalar_op(void* data1, ScalarType dtype1, size_t outsize, //NOLINT
 template <typename T, typename Func>
 void temp_binary_op(T* data1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, size_t outsize, //NOLINT
                     void* data2, ScalarType dtype2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2,
-                    T* out, const std::vector<size_t>& out_strides, Func func) {
+                    T* out, const std::vector<size_t>& out_strides, Func func, bool inverted=false) {
     #define DEFINE_TYPE(U, name) \
     case (ScalarType::name): \
         binary_op_(data1, shape1, strides1, outsize, \
                    static_cast<U*>(data2), shape2, strides2, \
-                   out, out_strides, func); \
+                   out, out_strides, func, inverted); \
         break;
     switch(dtype2) {
         SCALAR_TYPES(DEFINE_TYPE)
@@ -137,7 +142,7 @@ void binary_op(void* data1, ScalarType dtype1, const std::vector<size_t>& shape1
             } else if (dtype2 == dtype) { \
                 temp_binary_op(static_cast<T*>(data2), shape2, strides2, outsize, \
                                data1, dtype1, shape1, strides1, \
-                               static_cast<T*>(out), out_strides, func); \
+                               static_cast<T*>(out), out_strides, func, true); \
             } \
             break; \
         }

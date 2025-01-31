@@ -17,7 +17,7 @@ Tensor AddFunction::Forward(const Tensor& lhs, const Tensor& rhs) {
 Tensor AddFunction::Forward(const Tensor& lhs, const Scalar& rhs) {
     bool requires_grad = lhs.GetRequiresGrad();
     lhs_ = lhs.GetImpl();
-    rhs_ = nullptr;
+    rhs_ = std::make_shared<TensorImpl>(rhs);
     auto output = AddImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -84,7 +84,7 @@ Tensor SubFunction::Forward(const Tensor& lhs, const Tensor& rhs) {
 Tensor SubFunction::Forward(const Tensor& lhs, const Scalar& rhs) {
     bool requires_grad = lhs.GetRequiresGrad();
     lhs_ = lhs.GetImpl();
-    rhs_ = nullptr;
+    rhs_ = std::make_shared<TensorImpl>(rhs);
     auto output = SubImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -153,7 +153,7 @@ Tensor MulFunction::Forward(const Tensor& lhs, const Tensor& rhs) {
 Tensor MulFunction::Forward(const Tensor& lhs, const Scalar& rhs) {
     bool requires_grad = lhs.GetRequiresGrad();
     lhs_ = lhs.GetImpl();
-    rhs_ = nullptr;
+    rhs_ = std::make_shared<TensorImpl>(rhs);
     auto output = MulImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -220,7 +220,7 @@ Tensor DivFunction::Forward(const Tensor& lhs, const Tensor& rhs) {
 Tensor DivFunction::Forward(const Tensor& lhs, const Scalar& rhs) {
     bool requires_grad = lhs.GetRequiresGrad();
     lhs_ = lhs.GetImpl();
-    rhs_ = nullptr;
+    rhs_ = std::make_shared<TensorImpl>(rhs);
     auto output = DivImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -288,7 +288,7 @@ Tensor PowFunction::Forward(const Tensor& lhs, const Tensor& rhs) {
 Tensor PowFunction::Forward(const Tensor& lhs, const Scalar& rhs) {
     bool requires_grad = lhs.GetRequiresGrad();
     lhs_ = lhs.GetImpl();
-    rhs_ = nullptr;
+    rhs_ = std::make_shared<TensorImpl>(rhs);
     auto output = PowImpl(lhs, rhs);
     output.SetRequiresGrad(requires_grad);
     return output;

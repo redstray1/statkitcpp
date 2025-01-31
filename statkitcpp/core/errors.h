@@ -38,6 +38,12 @@ public:
         : std::out_of_range{"Axis " + std::to_string(dim) + " out of bound of tensor of dimension " + std::to_string(dims)} {
     }
 };
+class DegreesOfFreedomError : public std::runtime_error {
+public:
+    explicit DegreesOfFreedomError()
+        : std::runtime_error{"var(): degrees of freedom is <= 0."} {
+    }
+};
 class OutOfRangeFlatError : public std::out_of_range {
 public:
     explicit OutOfRangeFlatError(size_t flat_index, size_t size)

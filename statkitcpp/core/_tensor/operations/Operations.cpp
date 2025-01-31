@@ -147,6 +147,9 @@ Tensor VarImpl(const Tensor &arg, int dim, bool keepdims) {
         dim += arg.GetNDim();
     }
     auto shape = arg.GetShape();
+    if (shape[dim] <= 1) {
+        throw DegreesOfFreedomError{};
+    }
     auto strides = arg.GetStrides();
     ops::var(arg.GetStorage(), arg.GetDType(), shape, strides, dim, out.GetStorage());
     return out;

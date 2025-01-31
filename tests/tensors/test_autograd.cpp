@@ -1,5 +1,5 @@
-#include "../../statkitcpp/core/_tensor/Tensor.h"
-#include "../../statkitcpp/core/_tensor/TensorCreationOps.h"
+#include "Tensor.h"
+#include "TensorCreationOps.h"
 #include "datatypes.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
@@ -29,7 +29,7 @@ TEST_CASE("Complex autograd") {
         REQUIRE(c.GetRequiresGrad());
         c.Backward();
         REQUIRE_THROWS(b.GetGrad());
-        std::cout << (a.GetGrad()).ToString() << std::endl;
+        // std::cout << (a.GetGrad()).ToString() << std::endl;
     }
     {
         Tensor a = Arange(0, 5);
@@ -37,7 +37,28 @@ TEST_CASE("Complex autograd") {
         auto c = a.Exp();
         c = c.Mean();
         c.Backward();
-        std::cout << (a.GetGrad()).ToString() << std::endl;
+        // std::cout << (a.GetGrad()).ToString() << std::endl;
+    }
+    {
+        Tensor a = Full({1, 1}, 0.697328);
+        Tensor b = Full({1}, 0.580362);
+        a.SetRequiresGrad(true);
+        b.SetRequiresGrad(true);
+        auto c = a / b;
+        c.Backward();
+    }
+    {
+        Tensor a = Full({100, 20, 5, 2}, 4);
+        a.SetRequiresGrad(true);
+        auto c = a.Sum(3);
+        c.Backward();
+    }
+    {
+         Tensor a = Arange(1, 4);
+        a.SetRequiresGrad(true);
+        auto c = a.Var();
+        c.Backward();
+        std::cout << (a.GetGrad()).ToString();
     }
 }
 

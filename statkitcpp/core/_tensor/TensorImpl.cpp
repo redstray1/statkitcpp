@@ -1,6 +1,7 @@
 #include "TensorImpl.h"
 #include "../errors.h"
 #include "Operations.h"
+#include "Scalar.h"
 #include "ScalarType.h"
 #include "Tensor.h"
 #include "shape.h"
@@ -67,6 +68,28 @@ TensorImpl::TensorImpl(const Storage& storage,
     storage_ = storage;
     requires_grad_ = requires_grad;
 }
+
+TensorImpl::TensorImpl(const Scalar& scalar,
+                       ScalarType dtype,
+                       bool requires_grad) : storage_(ItemSize(dtype)) {
+    SKPP_CHECK(scalar, dtype);
+    size_ = 1;
+    shape_ = {1};
+    strides_ = {1};
+    dtype_ = dtype;
+    requires_grad_ = requires_grad;
+    #define DEFINE_DTYPE(T, name) \
+    case (ScalarType::name): \
+        *static_cast<T*>(storage_.GetDataPtr()) = scalar.to##name(); \
+        break;
+    switch(dtype) {
+        SCALAR_TYPES(DEFINE_DTYPE)
+        default:
+            throw InvalidDatatypeError{};
+    }
+    #undef DEFINE_DTYPE
+}
+
 
 // Constructors END------------------------------------------------------------
 
@@ -162,6 +185,18 @@ void TensorImpl::SetShape(const std::vector<size_t>& shape) {
 
 void TensorImpl::Reshape(const std::vector<size_t>& new_shape) {
     SetShape(new_shape);
+}
+
+void TensorImpl::Unsqueeze(int dim) {
+    if (dim < 0) {
+        dim += GetNDim();
+    }
+    shape_.insert(shape_.begin() + dim, 1);
+    if (dim == 0) {
+        strides_.insert(strides_.begin(), size_);
+    } else {
+        strides_.insert(strides_.begin() + dim, strides_[dim - 1]);
+    }
 }
 
 const std::vector<size_t> TensorImpl::GetStrides() const {

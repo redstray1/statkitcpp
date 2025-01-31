@@ -83,6 +83,8 @@ public:
 class SumFunction : public GradFunction {
 private:
     std::shared_ptr<TensorImpl> arg_;
+    int dim_;
+    bool keepdims_;
 public:
     SumFunction() = default;
     ~SumFunction() {}
@@ -95,6 +97,8 @@ public:
 class ProdFunction : public GradFunction {
 private:
     std::shared_ptr<TensorImpl> arg_;
+    int dim_;
+    bool keepdims_;
 public:
     ProdFunction() = default;
     ~ProdFunction() {}
@@ -107,7 +111,8 @@ public:
 class MeanFunction : public GradFunction {
 private:
     std::shared_ptr<TensorImpl> arg_;
-    size_t dim_;
+    int dim_;
+    bool keepdims_;
 public:
     MeanFunction() = default;
     ~MeanFunction() {}
@@ -120,7 +125,8 @@ public:
 class VarFunction : public GradFunction {
 private:
     std::shared_ptr<TensorImpl> arg_;
-    size_t dim_;
+    int dim_;
+    bool keepdims_;
 public:
     VarFunction() = default;
     ~VarFunction() {}

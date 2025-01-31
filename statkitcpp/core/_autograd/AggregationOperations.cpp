@@ -2,6 +2,8 @@
 #include "tensor_creation_ops.h"
 #include "../_tensor/operations/Operations.h"
 #include "Tensor.h"
+#include <iostream>
+#include "shape.h"
 
 namespace statkitcpp {
 
@@ -9,6 +11,8 @@ namespace statkitcpp {
 Tensor SumFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
+    dim_ = dim;
+    keepdims_ = keepdims;
     auto output = SumImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -17,9 +21,10 @@ Tensor SumFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
 std::vector<Tensor> SumFunction::Backward(const Tensor& grad_output) {
     std::vector<Tensor> dargs(1);
     if (arg_->GetRequiresGrad()) {
+        std::cout << ShapeToString(grad_output.GetShape()) << '\n' << ShapeToString(arg_->GetShape()) << std::endl;
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
-        darg = MulImpl(darg, grad_output);
+        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
         dargs[0] = darg;
     }
     return dargs;
@@ -38,6 +43,8 @@ std::vector<std::shared_ptr<TensorImpl>> SumFunction::GetChildren() {
 Tensor ProdFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
+    dim_ = dim;
+    keepdims_ = keepdims;
     auto output = ProdImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -62,6 +69,7 @@ Tensor MeanFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    keepdims_ = keepdims;
     auto output = MeanImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -74,7 +82,7 @@ std::vector<Tensor> MeanFunction::Backward(const Tensor& grad_output) {
     if (arg_->GetRequiresGrad()) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
-        darg = MulImpl(darg, grad_output);
+        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
         darg = DivImpl(darg, static_cast<int>(arg_->GetDim(dim_)));
         dargs[0] = darg;
     }
@@ -97,6 +105,7 @@ Tensor VarFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    keepdims_ = keepdims;
     auto output = VarImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
     return output;
@@ -108,10 +117,10 @@ std::vector<Tensor> VarFunction::Backward(const Tensor& grad_output) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
         Tensor temp(arg_);
-        darg = MulImpl(darg, grad_output);
-        darg = MulImpl(darg, 2);
-        darg = MulImpl(darg, SubImpl(temp, MeanImpl(temp, dim_, true)));
-        darg = DivImpl(darg, static_cast<int>(arg_->GetShape()[dim_]));
+        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        auto dsub = SubImpl(temp, MeanImpl(temp, dim_, true));
+        darg = MulImpl(darg, AddImpl(dsub, MeanImpl(dsub, dim_, true)));
+        darg = MulImpl(darg, 2.0 / static_cast<double>(arg_->GetDim(dim_) - 1));
         dargs[0] = darg;
     }
     return dargs;

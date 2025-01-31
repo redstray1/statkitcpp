@@ -51,4 +51,5 @@ Tensor SqrtDerivImpl(const Tensor& arg);
 
 //Tensor operations
 Tensor ReshapeImpl(const Tensor& arg, const std::vector<size_t>& shape);
+Tensor UnsqueezeImpl(const Tensor& arg, int dim);
 }

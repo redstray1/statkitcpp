@@ -1,10 +1,16 @@
 import numpy as np
 import statkitcpp as skpp
 
-for _ in range(10):
-    a = np.random.random((5, 1))
-    b = np.random.random((1, 5))
-    a1 = skpp.Tensor(a)
-    b1 = skpp.Tensor(b)
-    assert np.allclose(np.array(a1.exp()), np.exp(a))
-    assert np.allclose(np.array(a1 + b1), a + b)
+a_np = np.random.random()
+
+a = skpp.arange(start=0, end=5)
+b = skpp.arange(start=0, end=5).reshape([5, 1])
+
+a.requires_grad = True
+b.requires_grad = True
+
+c = (a + b).var()
+
+c.backward()
+
+print(a.grad)

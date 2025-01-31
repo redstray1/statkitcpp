@@ -63,6 +63,9 @@ public:
                         const std::vector<size_t>& shape,
                         ScalarType dtype = kFloat32,
                         bool requires_grad = false);
+    explicit TensorImpl(const Scalar& scalar,
+                        ScalarType dtype = kFloat32,
+                        bool requires_grad = false);
     TensorImpl(const TensorImpl& other) = delete;
     TensorImpl(TensorImpl&& other) = delete;
     ~TensorImpl() {}
@@ -77,6 +80,7 @@ public:
     const std::vector<size_t> GetShape() const;
     void SetShape(const std::vector<size_t>& shape);
     void Reshape(const std::vector<size_t>& new_shape);
+    void Unsqueeze(int dim);
 
     const std::vector<size_t> GetStrides() const;
     size_t GetSize() const;
