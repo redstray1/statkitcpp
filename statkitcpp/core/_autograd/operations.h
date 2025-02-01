@@ -136,6 +136,34 @@ public:
     std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
 };
 
+class MaxFunction : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> arg_;
+    int dim_;
+    bool keepdims_;
+public:
+    MaxFunction() = default;
+    ~MaxFunction() {}
+    Tensor Forward(const Tensor& arg, int dim, bool keepdims);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
+
+class MinFunction : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> arg_;
+    int dim_;
+    bool keepdims_;
+public:
+    MinFunction() = default;
+    ~MinFunction() {}
+    Tensor Forward(const Tensor& arg, int dim, bool keepdims);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
+
 //Pointwise operations-------------------------------------------------------------------------------
 class NegFunction : public GradFunction {
 private:

@@ -62,3 +62,17 @@ def test_prod(t: Case) -> None:
         a = np.random.random(t.shape)
         a1 = skpp.Tensor(a)
         assert np.allclose(a.prod(axis=t.dim), a1.prod(t.dim))
+
+@pytest.mark.parametrize('t',TEST_CASES, ids=str)
+def test_max(t: Case) -> None:
+    for _ in range(10):
+        a = np.random.random(t.shape)
+        a1 = skpp.Tensor(a)
+        assert np.allclose(a.max(axis=t.dim), a1.max(t.dim))
+
+@pytest.mark.parametrize('t',TEST_CASES, ids=str)
+def test_min(t: Case) -> None:
+    for _ in range(10):
+        a = np.random.random(t.shape)
+        a1 = skpp.Tensor(a)
+        assert np.allclose(a.min(axis=t.dim), a1.min(t.dim))

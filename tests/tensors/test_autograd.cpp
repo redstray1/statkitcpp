@@ -3,6 +3,7 @@
 #include "datatypes.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <optional>
 
 namespace statkitcpp {
 
@@ -15,22 +16,10 @@ TEST_CASE("Add autograd") {
         auto c = a.Add(b);
         c.Backward();
     }
+    
 }
 
-TEST_CASE("Complex autograd") {
-    {
-        Tensor a = Arange(0, 5);
-        Tensor b = Arange(0, 5).Reshape({5, 1});
-        b.SetRequiresGrad(true);
-        a.SetRequiresGrad(true);
-        auto c = a.Add(b);
-        REQUIRE(a.GetRequiresGrad());
-        REQUIRE(b.GetRequiresGrad());
-        REQUIRE(c.GetRequiresGrad());
-        c.Backward();
-        REQUIRE_THROWS(b.GetGrad());
-        // std::cout << (a.GetGrad()).ToString() << std::endl;
-    }
+TEST_CASE("Simple autograd") {
     {
         Tensor a = Arange(0, 5);
         a.SetRequiresGrad(true);
@@ -54,12 +43,34 @@ TEST_CASE("Complex autograd") {
         c.Backward();
     }
     {
-         Tensor a = Arange(1, 4);
+        Tensor a = Arange(1, 4);
         a.SetRequiresGrad(true);
         auto c = a.Var();
         c.Backward();
-        std::cout << (a.GetGrad()).ToString();
     }
+    {
+        Tensor a = Ones({5, 5}) * Arange(0, 5);
+        a.SetRequiresGrad(true);
+        auto b = a.Max(-1);
+        b.Backward(std::nullopt, std::nullopt, true);
+        std::cout << (a.GetGrad()).ToString() << std::endl;
+    }
+}
+
+TEST_CASE("Complex autograd") {
+    {
+        Tensor a = Arange(0, 5);
+        Tensor b = Arange(0, 5).Reshape({5, 1});
+        b.SetRequiresGrad(true);
+        a.SetRequiresGrad(true);
+        auto c = a.Add(b);
+        REQUIRE(a.GetRequiresGrad());
+        REQUIRE(b.GetRequiresGrad());
+        REQUIRE(c.GetRequiresGrad());
+        c.Backward();
+        REQUIRE_THROWS(b.GetGrad());
+    }
+    
 }
 
 }

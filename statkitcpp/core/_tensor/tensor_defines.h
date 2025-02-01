@@ -13,6 +13,8 @@
     _(Prod, ProdFunction, prod) \
     _(Mean, MeanFunction, mean) \
     _(Var, VarFunction, var) \
+    _(Max, MaxFunction, max) \
+    _(Min, MinFunction, min)
 
 #define TENSOR_POINTWISE_METHODS(_) \
     _(Exp, ExpFunction, exp) \

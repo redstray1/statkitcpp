@@ -9,7 +9,7 @@ b = skpp.arange(start=0, end=5).reshape([5, 1])
 a.requires_grad = True
 b.requires_grad = True
 
-c = (a + b).var()
+c = (a + b).max()
 
 c.backward()
 

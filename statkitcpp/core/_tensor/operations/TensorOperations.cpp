@@ -25,4 +25,16 @@ Tensor UnsqueezeImpl(const Tensor &arg, int dim) {
     return output;
 }
 
+Tensor SqueezeImpl(const Tensor &arg, int dim) {
+    auto shape = arg.GetShape();
+    if (dim < 0) {
+        dim += arg.GetNDim();
+    }
+    if (shape[dim] == 1) {
+        shape.erase(shape.begin() + dim);
+    }
+    Tensor output(arg.GetStorage(), shape, arg.GetDType());
+    return output;
+}
+
 }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstdlib>
 #include <functional>
 #include <cmath>
+#include "config.h"
 #include <type_traits>
 
 namespace statkitcpp {
@@ -179,6 +181,50 @@ struct exp_deriv<void>
   auto operator()(T&& x, U&& y) const
     -> decltype(std::pow(std::forward<T>(x), std::forward<U>(y)) * std::log(std::forward<T>(x))) {
       return std::pow(std::forward<T>(x), std::forward<U>(y)) * std::log(std::forward<T>(x));
+    }
+};
+
+
+template <class Type = void>
+struct equal : public std::binary_function <Type, Type, Type> //NOLINT
+{
+    Type operator()(const Type& x, const Type& y) const {
+        return (x == y);
+    }
+};
+
+template <>
+struct equal<void>
+{
+  template <class T, class U>
+  auto operator()(T&& x, U&& y) const
+    -> decltype(std::forward<T>(x) == std::forward<U>(y)) {
+      return std::forward<T>(x) == std::forward<U>(y);
+    }
+};
+
+
+template <class Type = void>
+struct close : public std::binary_function <Type, Type, Type> //NOLINT
+{
+    long double atol = 1e-9;
+    close() {}
+    close(long double atol) : atol(atol) {}
+    Type operator()(const Type& x, const Type& y) const {
+        return abs(x - y) < atol;
+    }
+};
+
+template <>
+struct close<void>
+{
+  long double atol = kMachinePrecision;
+  close() {}
+  close(long double atol) : atol(atol) {}
+  template <class T, class U>
+  auto operator()(T&& x, U&& y) const
+    -> decltype(abs(std::forward<T>(x) - std::forward<U>(y)) < atol) {
+      return abs(std::forward<T>(x) - std::forward<U>(y)) < atol;
     }
 };
 

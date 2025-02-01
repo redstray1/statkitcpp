@@ -29,7 +29,8 @@ enum class ScalarType {
     #define DEFINE_ENUM_TYPES_(_1, n) n,
     SCALAR_TYPES(DEFINE_ENUM_TYPES_)
     #undef DEFINE_ENUM_TYPES_
-    NumOptions
+    NumOptions,
+    Undefined
 };
 
 template <ScalarType N>

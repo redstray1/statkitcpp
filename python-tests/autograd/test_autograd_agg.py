@@ -85,3 +85,37 @@ def test_var(t: Case) -> None:
         c_torch.backward(torch.ones_like(c_torch))
 
         assert np.allclose(a_torch.grad.numpy(), np.array(a_skpp.grad))
+
+
+@pytest.mark.parametrize('t',TEST_CASES, ids=str)
+def test_max(t: Case) -> None:
+    for _ in range(10):
+        a_np = np.random.random(t.shape)
+        a_skpp = skpp.Tensor(a_np)
+        a_torch = torch.tensor(a_np, requires_grad=True)
+
+        a_skpp.requires_grad = True
+        
+        c_skpp = a_skpp.max(t.dim)
+        c_torch = a_torch.max(t.dim)[0]
+        c_skpp.backward()
+        c_torch.backward(torch.ones_like(c_torch))
+
+        assert np.allclose(a_torch.grad.numpy(), np.array(a_skpp.grad))
+
+
+@pytest.mark.parametrize('t',TEST_CASES, ids=str)
+def test_min(t: Case) -> None:
+    for _ in range(10):
+        a_np = np.random.random(t.shape)
+        a_skpp = skpp.Tensor(a_np)
+        a_torch = torch.tensor(a_np, requires_grad=True)
+
+        a_skpp.requires_grad = True
+        
+        c_skpp = a_skpp.min(t.dim)
+        c_torch = a_torch.min(t.dim)[0]
+        c_skpp.backward()
+        c_torch.backward(torch.ones_like(c_torch))
+
+        assert np.allclose(a_torch.grad.numpy(), np.array(a_skpp.grad))

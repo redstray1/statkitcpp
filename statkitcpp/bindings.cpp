@@ -79,10 +79,10 @@ void DeclareTensor(py::module& module) {
 
     cls.def(py::init<py::buffer>());
 
-    module.def("full", &FullPy, py::kw_only(), py::arg("shape"), py::arg("value"), py::arg("dtype") = ScalarType::Float);
-    module.def("zeros", &ZerosPy, py::kw_only(), py::arg("shape"), py::arg("dtype") = ScalarType::Float);
-    module.def("ones", &OnesPy, py::kw_only(), py::arg("shape"), py::arg("dtype") = ScalarType::Float);
-    module.def("arange", &ArangePy, py::kw_only(), py::arg("start"), py::arg("end"), py::arg("step") = Scalar(1), py::arg("dtype") = ScalarType::Float);
+    module.def("full", &FullPy, py::arg("shape"), py::arg("value"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
+    module.def("zeros", &ZerosPy, py::arg("shape"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
+    module.def("ones", &OnesPy, py::arg("shape"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
+    module.def("arange", &ArangePy, py::arg("start"), py::arg("end"), py::arg("step") = Scalar(1),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
 }
 
 PYBIND11_MODULE(_statkitcpp, m) {
