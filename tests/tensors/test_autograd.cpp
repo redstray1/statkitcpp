@@ -53,7 +53,6 @@ TEST_CASE("Simple autograd") {
         a.SetRequiresGrad(true);
         auto b = a.Max(-1);
         b.Backward(std::nullopt, std::nullopt, true);
-        std::cout << (a.GetGrad()).ToString() << std::endl;
     }
 }
 

@@ -19,7 +19,12 @@ TEST_CASE("Add operation") {
         Tensor b = Full({1, 5}, 0.33);
         Tensor c = a.Add(b);
         CHECK(c.GetDType() == kFloat32);
-        // std::cout << c.ToString();
+    }
+    {
+        Tensor a = Full({100, 100, 100}, 3);
+        Tensor b = Full({100, 100, 100}, 2);
+        Tensor c = a + b;
+        CHECK(c.GetDType() == kFloat32);
     }
 }
 

@@ -12,6 +12,9 @@ Tensor SumFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = SumImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -23,7 +26,11 @@ std::vector<Tensor> SumFunction::Backward(const Tensor& grad_output) {
     if (arg_->GetRequiresGrad()) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
-        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        if (!keepdims_) {
+            darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        } else {
+            darg = MulImpl(darg, grad_output);
+        }
         dargs[0] = darg;
     }
     return dargs;
@@ -43,6 +50,9 @@ Tensor ProdFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = ProdImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -68,6 +78,9 @@ Tensor MeanFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = MeanImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -81,7 +94,11 @@ std::vector<Tensor> MeanFunction::Backward(const Tensor& grad_output) {
     if (arg_->GetRequiresGrad()) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
-        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        if (!keepdims_) {
+            darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        } else {
+            darg = MulImpl(darg, grad_output);
+        }
         darg = DivImpl(darg, static_cast<int>(arg_->GetDim(dim_)));
         dargs[0] = darg;
     }
@@ -104,6 +121,9 @@ Tensor VarFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = VarImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -116,7 +136,11 @@ std::vector<Tensor> VarFunction::Backward(const Tensor& grad_output) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
         Tensor temp(arg_);
-        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        if (!keepdims_) {
+            darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        } else {
+            darg = MulImpl(darg, grad_output);
+        }
         auto dsub = SubImpl(temp, MeanImpl(temp, dim_, true));
         darg = MulImpl(darg, AddImpl(dsub, MeanImpl(dsub, dim_, true)));
         darg = MulImpl(darg, 2.0 / static_cast<double>(arg_->GetDim(dim_) - 1));
@@ -139,6 +163,9 @@ Tensor MaxFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = MaxImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -151,7 +178,11 @@ std::vector<Tensor> MaxFunction::Backward(const Tensor& grad_output) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
         Tensor temp(arg_);
-        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        if (!keepdims_) {
+            darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        } else {
+            darg = MulImpl(darg, grad_output);
+        }
         darg = MulImpl(darg, MaxDerivImpl(temp, dim_));
         dargs[0] = darg;
     }
@@ -173,6 +204,9 @@ Tensor MinFunction::Forward(const Tensor& arg, int dim, bool keepdims) {
     bool requires_grad = arg.GetRequiresGrad();
     arg_ = arg.GetImpl();
     dim_ = dim;
+    if (dim_ < 0) {
+        dim_ += arg.GetNDim();
+    }
     keepdims_ = keepdims;
     auto output = MinImpl(arg, dim, keepdims);
     output.SetRequiresGrad(requires_grad);
@@ -185,7 +219,11 @@ std::vector<Tensor> MinFunction::Backward(const Tensor& grad_output) {
         Tensor darg(arg_->GetShape(), arg_->GetDType());
         ops::ones(darg);
         Tensor temp(arg_);
-        darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        if (!keepdims_) {
+            darg = MulImpl(darg, UnsqueezeImpl(grad_output, dim_));
+        } else {
+            darg = MulImpl(darg, grad_output);
+        }
         darg = MulImpl(darg, MinDerivImpl(temp, dim_));
         dargs[0] = darg;
     }

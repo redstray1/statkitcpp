@@ -2,6 +2,7 @@
 #include "Tensor.h"
 #include "errors.h"
 #include "memory_ops.h"
+#include "binary_ops_memory.h"
 #include "../shape.h"
 #include "Scalar.h"
 #include "ScalarType.h"
@@ -21,17 +22,22 @@ namespace statkitcpp {
 
 
 template <typename BinaryOperation>
-Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op, ScalarType out_type) {
+Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, const BinaryOperation& op, ScalarType out_type) {
     auto output_shape = BroadcastShapes(lhs.GetShape(), rhs.GetShape());
     ScalarType output_type = out_type;
     if (out_type == ScalarType::Undefined) {
         output_type = PromoteTypes(lhs.GetDType(), rhs.GetDType());;
     }
     Tensor output(output_shape, output_type);
-
-    ops::binary_op(lhs.GetDataPointer(), lhs.GetDType(), lhs.GetShape(), lhs.GetStrides(), output.GetSize(),
+    // DimMask mask_lhs = GetMaskOfOnes(lhs.GetShape());
+    // DimMask mask_rhs = GetMaskOfOnes(rhs.GetShape());
+    // TensorIteratorPair it(lhs, rhs);
+    // ops::binary_op(it, lhs.GetDType(), rhs.GetDType(),
+    //                output.GetDataPointer(), op);
+    ops::binary_op(lhs.GetDataPointer(), lhs.GetDType(), lhs.GetShape(), lhs.GetStrides(),
+                   output.GetSize(),
                    rhs.GetDataPointer(), rhs.GetDType(), rhs.GetShape(), rhs.GetStrides(),
-                   output.GetDataPointer(), output.GetDType(), output.GetStrides(), op);
+                   output.GetDataPointer(), output_type, output.GetStrides(), op);
     return output;
 }
 
@@ -49,7 +55,7 @@ Tensor ApplyBinaryOp(const Tensor& lhs, const Scalar& rhs, BinaryOperation op, S
 }
 
 Tensor AddImpl(const Tensor& lhs, const Tensor& rhs) {
-    return ApplyBinaryOp(lhs, rhs, std::plus());
+    return AddOptimized(lhs, rhs);
 }
 
 Tensor AddImpl(const Tensor& lhs, const Scalar& rhs) {
@@ -57,7 +63,7 @@ Tensor AddImpl(const Tensor& lhs, const Scalar& rhs) {
 }
 
 Tensor SubImpl(const Tensor& lhs, const Tensor& rhs) {
-    return ApplyBinaryOp(lhs, rhs, std::minus());
+    return SubOptimized(lhs, rhs);
 }
 
 Tensor SubImpl(const Tensor& lhs, const Scalar& rhs) {
@@ -65,7 +71,7 @@ Tensor SubImpl(const Tensor& lhs, const Scalar& rhs) {
 }
 
 Tensor MulImpl(const Tensor& lhs, const Tensor& rhs) {
-    return ApplyBinaryOp(lhs, rhs, std::multiplies());
+    return MulOptimized(lhs, rhs);
 }
 
 Tensor MulImpl(const Tensor& lhs, const Scalar& rhs) {
@@ -73,7 +79,7 @@ Tensor MulImpl(const Tensor& lhs, const Scalar& rhs) {
 }
 
 Tensor DivImpl(const Tensor& lhs, const Tensor& rhs) {
-    return ApplyBinaryOp(lhs, rhs, std::divides());
+    return DivOptimized(lhs, rhs);
 }
 
 Tensor DivImpl(const Tensor& lhs, const Scalar& rhs) {

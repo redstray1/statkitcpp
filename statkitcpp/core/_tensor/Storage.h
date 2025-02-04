@@ -16,6 +16,7 @@ class Storage {
 private:
     void* data_ptr_;
     size_t size_bytes_;
+    bool view_ = false;
 public:
     Storage(size_t n_bytes) { data_ptr_ = malloc(n_bytes); size_bytes_ = n_bytes; }
     Storage(void* data_ptr, size_t n_bytes) : size_bytes_(n_bytes) {
@@ -28,8 +29,10 @@ public:
         }
         size_bytes_ = other.size_bytes_;
         ClearData();
-        data_ptr_ = malloc(size_bytes_);
-        memcpy(data_ptr_, other.data_ptr_, size_bytes_);
+        // data_ptr_ = malloc(size_bytes_);
+        // memcpy(data_ptr_, other.data_ptr_, size_bytes_);
+        view_ = true;
+        data_ptr_ = other.data_ptr_;
         return *this;
     }
     Storage& operator=(Storage&& other) {
@@ -57,15 +60,17 @@ public:
             return;
         }
         size_bytes_ = other.size_bytes_;
-        data_ptr_ = malloc(size_bytes_);
-        memcpy(data_ptr_, other.data_ptr_, size_bytes_);
+        // data_ptr_ = malloc(size_bytes_);
+        // memcpy(data_ptr_, other.data_ptr_, size_bytes_);
+        view_ = true;
+        data_ptr_ = other.data_ptr_;
     }
     ~Storage() {
         ClearData();
     }
 
     void ClearData() {
-        if (data_ptr_ != nullptr) {
+        if (!view_ && data_ptr_ != nullptr) {
             free(data_ptr_);
             data_ptr_ = nullptr;
         }
@@ -84,7 +89,7 @@ public:
         return data_ptr_;
     }
 
-    void* GetDataPtr() {
+    void*& GetDataPtr() {
         return data_ptr_;
     }
 
@@ -122,5 +127,9 @@ public:
     }
 
 };
+
+bool IsSharedStorage(const Storage& storage0, const Storage& storage1);
+
+void StorageCopy(Storage& dest, ScalarType dest_type, const Storage& src, ScalarType src_type);
 
 }

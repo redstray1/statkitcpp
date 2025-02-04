@@ -21,7 +21,6 @@ namespace statkitcpp {
 class Tensor {
 friend class TensorDispatcher;
 friend class TensorImpl;
-friend class TensorBody;
 private:
 
     std::shared_ptr<TensorImpl> impl_;
@@ -33,7 +32,7 @@ private:
     std::vector<size_t> GetIndexesFromFlat(size_t flat_index) const {
         return impl_->GetIndexesFromFlat(flat_index);
     }
-    
+    void CopyFrom(Tensor other);
     // template <typename BinaryOperation>
     // friend Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op);
 public:
@@ -62,7 +61,7 @@ public:
 
     Tensor& operator=(const Scalar& other);
 
-    Tensor ToType(ScalarType t) const;
+    Tensor ToType(ScalarType type) const;
 
     std::string ToString() const;
 
@@ -75,6 +74,8 @@ public:
     ScalarType GetDType() const { return impl_->GetDType(); }
     size_t GetSize() const { return impl_->GetSize(); };
     size_t GetNDim() const { return impl_->GetNDim(); };
+    size_t GetDim(int dim) const { return impl_->GetDim(dim); }
+    size_t GetStride(int dim) const { return impl_->GetStride(dim); }
 
     void SetRequiresGrad(bool requires_grad) { impl_->SetRequiresGrad(requires_grad); };
     bool GetRequiresGrad() const { return impl_->GetRequiresGrad(); };
@@ -82,6 +83,10 @@ public:
 
     void* GetDataPointer()  { return impl_->GetDataPointer(); }
     void* GetDataPointer() const  { return impl_->GetDataPointer(); }
+    template <class T>
+    T* data_ptr() { return static_cast<T*>(GetDataPointer()); } // NOLINT
+    template <class T>
+    T* data_ptr() const { return static_cast<T*>(GetDataPointer()); } // NOLINT
     Storage& GetStorage() { return impl_->GetStorage(); }
     const Storage& GetStorage() const { return impl_->GetStorage(); }
     size_t GetItemSize() const  { return impl_->GetItemSize(); }
@@ -101,6 +106,9 @@ public:
     TENSOR_BINARY_DECLARATIONS_WITH_OP(OPERATORS_DEFINITIONS)
 
     TENSOR_BINARY_DECLARATIONS_WITHOUT_OP(OPERATOR_METHODS_DECLARATIONS)
+
+    TENSOR_LINALG_OPERATIONS_WITH_OP(LINALG_METHODS_DECLARATIONS)
+    TENSOR_LINALG_OPERATIONS_WITHOUT_OP(LINALG_METHODS_DECLARATIONS)
 
     TENSOR_POINTWISE_METHODS(POINTWISE_DECLARATIONS)
 };

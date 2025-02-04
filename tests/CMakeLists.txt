@@ -1,5 +1,6 @@
 file(GLOB SRC_TEST CONFIGURE_DEPENDS "tensors/*.cpp")
 add_catch(test_tensor ${SRC_TEST})
 target_link_libraries(test_tensor PRIVATE libcore)
+target_include_directories(test_tensor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../statkitcpp/core/_utils)
 target_include_directories(test_tensor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../statkitcpp/core/_tensor)
 target_include_directories(test_tensor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../statkitcpp/core/_autograd)

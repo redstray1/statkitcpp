@@ -86,6 +86,7 @@ public:
     size_t GetSize() const;
     size_t GetNDim() const;
     size_t GetDim(int dim) const;
+    size_t GetStride(int dim) const;
 
     Tensor& GetGrad();
 
@@ -93,7 +94,7 @@ public:
     bool GetRequiresGrad() const { return requires_grad_; };
     bool IsLeaf() const { return grad_fn == nullptr; }
 
-    void* GetDataPointer()  { return storage_.GetDataPtr(); }
+    void*& GetDataPointer()  { return storage_.GetDataPtr(); }
     Storage& GetStorage() { return storage_; }
     size_t GetItemSize() const  { return ItemSize(dtype_); }
     size_t GetNBytes() const  { return GetSize() * GetItemSize(); }

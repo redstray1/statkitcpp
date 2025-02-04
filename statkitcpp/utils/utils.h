@@ -1,6 +1,8 @@
 #pragma once
 
 #include <sstream>
+#include <vector>
+#include <iostream>
 #include "../core/_tensor/ScalarType.h"
 
 namespace statkitcpp {
@@ -18,6 +20,14 @@ std::string ToString(void* data, ScalarType dtype) {
             return "Nan";
     }
     #undef DEFINE_REPR
+}
+
+template <class T>
+void PrintVector(const std::vector<T>& v) {
+    for (auto& x : v) {
+        std::cout << x << ' ';
+    }
+    std::cout << '\n';
 }
 
 }

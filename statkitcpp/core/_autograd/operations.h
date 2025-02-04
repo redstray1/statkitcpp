@@ -227,5 +227,34 @@ public:
     std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
 };
 
+//Linear algebra operations-------------------------------------------------------------------------------
+
+class DotFunction : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> lhs_;
+    std::shared_ptr<TensorImpl> rhs_;
+public:
+    DotFunction() = default;
+    ~DotFunction() {}
+    Tensor Forward(const Tensor& lhs, const Tensor& rhs);
+    Tensor Forward(const Tensor& lhs, const Scalar& rhs);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
+
+class MatMulFunction : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> lhs_;
+    std::shared_ptr<TensorImpl> rhs_;
+public:
+    MatMulFunction() = default;
+    ~MatMulFunction() {}
+    Tensor Forward(const Tensor& lhs, const Tensor& rhs);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
+
 }
 #endif

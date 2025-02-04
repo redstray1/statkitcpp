@@ -2,6 +2,9 @@
     TensorDispatcher name(const TensorDispatcher& other) const; \
     TensorDispatcher name(const Scalar& other) const;
 
+#define DISPATCHER_LINALG_METHODS_DECLARATIONS(op, name, func, _) \
+    TensorDispatcher name(const TensorDispatcher& other) const; \
+
 #define DISPATCHER_OPERATOR_DECLARATIONS(op, name, func, _) \
     inline TensorDispatcher operator op(const TensorDispatcher& other) const; \
     inline TensorDispatcher operator op(const Scalar& other) const;
@@ -26,6 +29,13 @@ TensorDispatcher TensorDispatcher::name(const TensorDispatcher& other) const { \
 TensorDispatcher TensorDispatcher::name(const Scalar& other) const { \
     return TensorDispatcher(tensor_.name(other)); \
 }
+
+
+#define DISPATCHER_LINALG_METHODS_DEFINITIONS(op, name, func, _) \
+TensorDispatcher TensorDispatcher::name(const TensorDispatcher& other) const { \
+    return TensorDispatcher(tensor_.name(other.tensor_)); \
+}
+
 
 #define DISPATCHER_OPERATOR_DEFINITIONS(op, name, func, _) \
 inline TensorDispatcher TensorDispatcher::operator op(const TensorDispatcher& other) const { \

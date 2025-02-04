@@ -218,6 +218,13 @@ size_t TensorImpl::GetDim(int dim) const {
     return shape_[dim];
 }
 
+size_t TensorImpl::GetStride(int dim) const {
+    if (dim < 0) {
+        dim += GetNDim();
+    }
+    return strides_[dim];
+}
+
 Tensor& TensorImpl::GetGrad() {
     if (grad == nullptr) {
         throw std::runtime_error{"Something strange happened, there is no .grad in this tensor"};

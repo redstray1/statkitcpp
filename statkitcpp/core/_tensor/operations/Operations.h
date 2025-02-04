@@ -2,12 +2,19 @@
 
 #include "../Tensor.h"
 #include "ScalarType.h"
+#include "config.h"
 
 namespace statkitcpp {
 
+//Specified binary operations
+Tensor AddOptimized(const Tensor& lhs, const Tensor& rhs);
+Tensor SubOptimized(const Tensor& lhs, const Tensor& rhs);
+Tensor MulOptimized(const Tensor& lhs, const Tensor& rhs);
+Tensor DivOptimized(const Tensor& lhs, const Tensor& rhs);
+
 //Binary operations
 template <typename BinaryOperation>
-Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, BinaryOperation op, ScalarType out_type = ScalarType::Undefined);
+Tensor ApplyBinaryOp(const Tensor& lhs, const Tensor& rhs, const BinaryOperation& op, ScalarType out_type = ScalarType::Undefined);
 
 template <typename BinaryOperation>
 Tensor ApplyBinaryOp(const Tensor& lhs, const Scalar& rhs, BinaryOperation op, ScalarType out_type = ScalarType::Undefined);
@@ -30,8 +37,16 @@ Tensor PowImpl(const Tensor& lhs, const Scalar& rhs);
 Tensor EqualImpl(const Tensor& lhs, const Tensor& rhs);
 Tensor EqualImpl(const Tensor& lhs, const Scalar& rhs);
 
-Tensor CloseImpl(const Tensor& lhs, const Tensor& rhs, long double atol);
-Tensor CloseImpl(const Tensor& lhs, const Scalar& rhs, long double atol);
+Tensor CloseImpl(const Tensor& lhs, const Tensor& rhs, long double atol = kMachinePrecision);
+Tensor CloseImpl(const Tensor& lhs, const Scalar& rhs, long double atol = kMachinePrecision);
+
+//Matrix multiplication operation
+Tensor DotImpl(const Tensor& lhs, const Tensor& rhs);
+Tensor VecMatImpl(const Tensor& lhs, const Tensor& rhs, bool rhs_transposed = false);
+Tensor MatVecImpl(const Tensor& lhs, const Tensor& rhs);
+Tensor MatMatMulImpl(const Tensor& lhs, const Tensor& rhs, bool rhs_transposed = false);
+Tensor BatchedMatMatMulImpl(const Tensor& lhs, const Tensor& rhs, bool rhs_transposed = false);
+Tensor MatMulImpl(const Tensor& lhs, const Tensor& rhs, bool rhs_transposed = false);
 
 //Binary derivation
 Tensor DivDerivImpl(const Tensor& lhs, const Tensor& rhs);

@@ -5,6 +5,7 @@
 #include "TensorCreationOps.h"
 #include "ScalarType.h"
 #include "autograd.h"
+#include "errors.h"
 #include "shape.h"
 #include "TensorImpl.h"
 #include <cstddef>
@@ -58,14 +59,31 @@ std::string Tensor::GetTypeName() const {
     return impl_->GetTypeName();
 }
 
+// void CopyFrom(Tensor other) {
+//     auto 
+// }
+
+//------------------------------------------------------------------------------------
+//Public methods----------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+
 std::string Tensor::ToString() const {
     auto repr = impl_->ToString();
     return repr;
 }
 
-//------------------------------------------------------------------------------------
-//Public methods----------------------------------------------------------------------
-//------------------------------------------------------------------------------------
+Tensor Tensor::ToType(ScalarType type) const {
+    if (GetDType() == type) {
+        return *this;
+    } else {
+        if (CanCast(GetDType(), type)) {
+            Tensor result(GetShape(), type, GetRequiresGrad());
+            return result;
+        } else {
+            throw TypeCastError{GetDTypeName(GetDType()), GetDTypeName(type)};
+        }
+    }
+}
 
 bool Tensor::BroadcastableTo(const Tensor& other) {
     return IsBroadcastable(GetShape(), other.GetShape());

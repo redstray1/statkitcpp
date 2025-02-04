@@ -115,6 +115,10 @@ inline std::ostream& operator<<(
     return stream << ToString(scalar_type);
 }
 
+// constexpr std::array<int64_t, static_cast<size_t>(ScalarType::NumOptions)> CalcDType2Index();
+
+// constexpr auto kDType2Index = CalcDType2Index();
+
 ScalarType PromoteTypes(ScalarType a, ScalarType b);
 
 std::string GetDTypeName(ScalarType scalar_type);

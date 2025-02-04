@@ -1,12 +1,19 @@
+#pragma once
 
 #define TENSOR_BINARY_DECLARATIONS_WITH_OP(_) \
     _(+, Add, AddFunction, add) \
     _(-, Sub, SubFunction, sub) \
     _(*, Mul, MulFunction, mul) \
-    _(/, Div, DivFunction, div) \
+    _(/, Div, DivFunction, div)
 
 #define TENSOR_BINARY_DECLARATIONS_WITHOUT_OP(_) \
-    _(**, Pow, PowFunction, pow) \
+    _(**, Pow, PowFunction, pow)
+
+#define TENSOR_LINALG_OPERATIONS_WITH_OP(_) \
+    _(@, MatMul, MatMulFunction, matmul)
+
+#define TENSOR_LINALG_OPERATIONS_WITHOUT_OP(_) \
+    _(_, Dot, DotFunction, dot)
 
 #define TENSOR_AGGREGATION_METHODS(_) \
     _(Sum, SumFunction, sum) \
@@ -27,7 +34,7 @@
 
 #define OPERATOR_METHODS_DECLARATIONS(op, name, func, _) \
     Tensor name(const Tensor& other) const; \
-    Tensor name(const Scalar& other) const; \
+    Tensor name(const Scalar& other) const;
 
 #define OPERATOR_DECLARATIONS(op, name, func, _) \
     inline Tensor operator op(const Tensor& other) const; \
@@ -48,7 +55,7 @@ Tensor Tensor::name(const Scalar& other) const { \
     auto result = operation->Forward(*this, other); \
     result.impl_->grad_fn = operation; \
     return result; \
-} \
+}
 
 #define OPERATORS_DEFINITIONS(op, name, func, _) \
 inline Tensor operator op(const Tensor& other) const { \
@@ -80,5 +87,18 @@ Tensor Tensor::name() const { \
     auto op = std::make_shared<func>(); \
     auto result = op->Forward(*this); \
     result.impl_->grad_fn = op; \
+    return result; \
+}
+
+
+
+#define LINALG_METHODS_DECLARATIONS(op, name, func, _) \
+    Tensor name(const Tensor& other) const;
+
+#define LINALG_METHODS_DEFINITIONS(op, name, func, _) \
+Tensor Tensor::name(const Tensor& other) const { \
+    auto operation = std::make_shared<func>(); \
+    auto result = operation->Forward(*this, other); \
+    result.impl_->grad_fn = operation; \
     return result; \
 }

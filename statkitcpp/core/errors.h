@@ -2,6 +2,7 @@
 #define ERRORS_HEADER_H
 #include <stdexcept>
 #include <string>
+#include <format>
 class SliceError : public std::invalid_argument {
 public:
     explicit SliceError(const std::string& reason)
@@ -12,6 +13,18 @@ class ReshapeError : public std::runtime_error {
 public:
     explicit ReshapeError(size_t size, const std::string& shape)
         : std::runtime_error{"Cannot reshape tensor of size " + std::to_string(size) + " into shape " + shape} {
+    }
+};
+class DotOperationError : public std::runtime_error {
+public:
+    explicit DotOperationError(size_t size1, size_t size2)
+        : std::runtime_error{"Cannot calculate dot product of vectors with sizes " + std::to_string(size1) + " and " + std::to_string(size2)} {
+    }
+};
+class MatMulError : public std::runtime_error {
+public:
+    explicit MatMulError(size_t n, size_t m)
+        : std::runtime_error{std::format("MatMul: Input operand 1 has a mismatch in its core dimension 0, with signature (n?,k),(k,m?)->(n?,m?) (size {} is different from {})", n, m)} {
     }
 };
 class InvalidDatatypeError : public std::runtime_error {
