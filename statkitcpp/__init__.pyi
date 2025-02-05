@@ -6,7 +6,7 @@
 from __future__ import annotations
 import typing
 import typing_extensions
-__all__ = ['Scalar', 'ScalarType', 'Tensor', 'arange', 'bool', 'float32', 'float64', 'full', 'int16', 'int32', 'int64', 'int8', 'ones', 'zeros']
+__all__ = ['Scalar', 'ScalarType', 'Slice', 'Tensor', 'arange', 'bool', 'float32', 'float64', 'full', 'int16', 'int32', 'int64', 'int8', 'ones', 'zeros']
 class Scalar:
     @staticmethod
     def _pybind11_conduit_v1_(*args, **kwargs):
@@ -87,6 +87,19 @@ class ScalarType:
     @property
     def value(self) -> int:
         ...
+class Slice:
+    @staticmethod
+    def _pybind11_conduit_v1_(*args, **kwargs):
+        ...
+    @typing.overload
+    def __init__(self, arg0: int, arg1: int, arg2: int) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: int) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: slice) -> None:
+        ...
 class Tensor:
     requires_grad: bool
     shape: list[int]
@@ -103,14 +116,18 @@ class Tensor:
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
+    def __getitem__(self, key: typing.Any) -> Tensor:
+        ...
     @typing.overload
     def __init__(self) -> None:
         ...
     @typing.overload
-    def __init__(self, *, shape: list[int], dtype: ScalarType = ..., requires_grad: bool = True) -> None:
+    def __init__(self, *, shape: list[int], dtype: ScalarType = ScalarType.float32, requires_grad: bool = True) -> None:
         ...
     @typing.overload
     def __init__(self, arg0: typing_extensions.Buffer) -> None:
+        ...
+    def __matmul__(self, other: Tensor) -> Tensor:
         ...
     @typing.overload
     def __mul__(self, arg0: Tensor) -> Tensor:
@@ -158,11 +175,19 @@ class Tensor:
     @typing.overload
     def div(self, other: Scalar) -> Tensor:
         ...
+    def dot(self, other: Tensor) -> Tensor:
+        ...
     def exp(self) -> Tensor:
         ...
     def log(self) -> Tensor:
         ...
+    def matmul(self, other: Tensor) -> Tensor:
+        ...
+    def max(self, dim: int = -1, *, keepdims: bool = False) -> Tensor:
+        ...
     def mean(self, dim: int = -1, *, keepdims: bool = False) -> Tensor:
+        ...
+    def min(self, dim: int = -1, *, keepdims: bool = False) -> Tensor:
         ...
     @typing.overload
     def mul(self, other: Tensor) -> Tensor:
@@ -192,7 +217,12 @@ class Tensor:
         ...
     def sum(self, dim: int = -1, *, keepdims: bool = False) -> Tensor:
         ...
+    def transpose(self, dim0: int = -2, dim1: int = -1) -> Tensor:
+        ...
     def var(self, dim: int = -1, *, keepdims: bool = False) -> Tensor:
+        ...
+    @property
+    def T(self) -> Tensor:
         ...
     @property
     def dtype(self) -> ScalarType:
@@ -215,13 +245,13 @@ class Tensor:
     @property
     def strides(self) -> list[int]:
         ...
-def arange(*, start: Scalar, end: Scalar, step: Scalar = ..., dtype: ScalarType = ...) -> Tensor:
+def arange(start: Scalar, end: Scalar, step: Scalar = 1, *, dtype: ScalarType = ScalarType.float32) -> Tensor:
     ...
-def full(*, shape: list[int], value: Scalar, dtype: ScalarType = ...) -> Tensor:
+def full(shape: list[int], value: Scalar, *, dtype: ScalarType = ScalarType.float32) -> Tensor:
     ...
-def ones(*, shape: list[int], dtype: ScalarType = ...) -> Tensor:
+def ones(shape: list[int], *, dtype: ScalarType = ScalarType.float32) -> Tensor:
     ...
-def zeros(*, shape: list[int], dtype: ScalarType = ...) -> Tensor:
+def zeros(shape: list[int], *, dtype: ScalarType = ScalarType.float32) -> Tensor:
     ...
 bool: ScalarType  # value = <ScalarType.bool: 6>
 float32: ScalarType  # value = <ScalarType.float32: 4>

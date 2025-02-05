@@ -1,5 +1,6 @@
 #include "shape.h"
 #include "../errors.h"
+#include "TensorIndex.h"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
@@ -180,4 +181,19 @@ DimMask GetMaskOfOnes(const std::vector<size_t>& shape) {
         }
     }
     return mask;
+}
+
+
+std::vector<size_t> GetShapeFromIndexing(const std::vector<statkitcpp::TensorIndex>& indices, const std::vector<size_t>& shape) {
+    std::vector<size_t> shape1;
+    shape1.reserve(shape.size());
+    for (size_t i = 0; i < indices.size(); i++) {
+        if (indices[i].IsSlice()) {
+            shape1.push_back(indices[i].GetSlice().Length());
+        }
+    }
+    for (size_t i = indices.size(); i < shape.size(); i++) {
+        shape1.push_back(shape[i]);
+    }
+    return shape1;
 }

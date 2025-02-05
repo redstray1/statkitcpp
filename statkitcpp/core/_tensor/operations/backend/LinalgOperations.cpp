@@ -45,7 +45,7 @@ Tensor DotImpl(const Tensor &lhs, const Tensor &rhs) {
         }
         #undef DEFINE_TYPE
     } else {
-        throw std::runtime_error{"Dot product for different types not implemented yet"};
+        throw NotImplemetedError{"Dot product for different types not implemented yet"};
     }
     return output;
 }
@@ -72,7 +72,7 @@ Tensor MatMatMulImpl(const Tensor &lhs, const Tensor &rhs, bool rhs_transposed) 
         }
         #undef DEFINE_TYPE
     } else {
-        throw std::runtime_error{"Matrix multiplication for different types not implemented yet"};
+        throw NotImplemetedError{"Matrix multiplication for different types not implemented yet"};
     }
     return output;
 }
@@ -99,7 +99,7 @@ Tensor VecMatImpl(const Tensor &lhs, const Tensor &rhs, bool rhs_transposed) {
         }
         #undef DEFINE_TYPE
     } else {
-        throw std::runtime_error{"Vector-Matrix multiplication for different types not implemented yet"};
+        throw NotImplemetedError{"Vector-Matrix multiplication for different types not implemented yet"};
     }
     return output;
 }
@@ -122,7 +122,7 @@ Tensor MatVecImpl(const Tensor &lhs, const Tensor &rhs) {
         }
         #undef DEFINE_TYPE
     } else {
-        throw std::runtime_error{"Matrix-vector multiplication for different types not implemented yet"};
+        throw NotImplemetedError{"Matrix-vector multiplication for different types not implemented yet"};
     }
     return output;
 }
@@ -150,7 +150,7 @@ Tensor BatchedMatMatMulImpl(const Tensor &lhs, const Tensor &rhs, bool rhs_trans
             }
             #undef DEFINE_TYPE
         } else {
-            throw std::runtime_error{"Batched Vector-Matrix multiplication for different types not implemented yet"};
+            throw NotImplemetedError{"Batched Vector-Matrix multiplication for different types not implemented yet"};
         }
         return output;
     }
@@ -170,7 +170,7 @@ Tensor BatchedMatMatMulImpl(const Tensor &lhs, const Tensor &rhs, bool rhs_trans
             }
             #undef DEFINE_TYPE
         } else {
-            throw std::runtime_error{"Batched Matrix-Vector multiplication for different types not implemented yet"};
+            throw NotImplemetedError{"Batched Matrix-Vector multiplication for different types not implemented yet"};
         }
         return output;
     }
@@ -214,7 +214,7 @@ Tensor BatchedMatMatMulImpl(const Tensor &lhs, const Tensor &rhs, bool rhs_trans
         #undef DEFINE_TYPE
         return output;
     }
-    throw std::runtime_error{"Not implemented yet."};
+    throw NotImplemetedError{"Not implemented yet."};
 }
 
 }

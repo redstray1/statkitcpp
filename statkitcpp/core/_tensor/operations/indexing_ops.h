@@ -1,0 +1,7 @@
+namespace statkitcpp {
+
+namespace ops {
+
+}
+
+}

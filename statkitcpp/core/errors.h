@@ -51,6 +51,12 @@ public:
         : std::out_of_range{"Axis " + std::to_string(dim) + " out of bound of tensor of dimension " + std::to_string(dims)} {
     }
 };
+class IndexAssignError : public std::runtime_error {
+public:
+    explicit IndexAssignError(size_t size1, size_t size2)
+        : std::runtime_error{"Can not assign tensor of size " + std::to_string(size2) + " in indexing tensor of size " + std::to_string(size1)} {
+    }
+};
 class DegreesOfFreedomError : public std::runtime_error {
 public:
     explicit DegreesOfFreedomError()
@@ -73,6 +79,12 @@ class InputsAndGradMismatchError : public std::runtime_error {
 public:
     explicit InputsAndGradMismatchError(size_t input_size, size_t grad_size)
         : std::runtime_error{"Mismatch number of inputs=" + std::to_string(input_size) + " and number of resulting gradients=" + std::to_string(grad_size) + " during backward."}{
+    }
+};
+class NotImplemetedError : public  std::runtime_error {
+public:
+    explicit NotImplemetedError(const std::string& message)
+        : std::runtime_error{message} {
     }
 };
 #endif

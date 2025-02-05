@@ -108,6 +108,14 @@ Scalar(Scalar&& rhs) noexcept : tag_(rhs.tag_) {
 Scalar(const Scalar& rhs) : tag_(rhs.tag_), v_(rhs.v_) {
 }
 
+void* ptr() { //NOLINT
+    return &v_;
+}
+
+const void* ptr() const { //NOLINT
+    return static_cast<const void*>(&v_);
+}
+
 private:
 
 enum class Tag { has_i, has_d, has_b };

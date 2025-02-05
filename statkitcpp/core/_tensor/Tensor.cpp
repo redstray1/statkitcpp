@@ -1,6 +1,7 @@
 #include "Tensor.h"
 #include "../_autograd/operations.h"
 #include "../operations/Operations.h"
+#include "tensor_cast.h"
 #include "Storage.h"
 #include "TensorCreationOps.h"
 #include "ScalarType.h"
@@ -78,6 +79,7 @@ Tensor Tensor::ToType(ScalarType type) const {
     } else {
         if (CanCast(GetDType(), type)) {
             Tensor result(GetShape(), type, GetRequiresGrad());
+            ops::copy(GetDataPointer(), GetDType(), result.GetDataPointer(), type, GetSize());
             return result;
         } else {
             throw TypeCastError{GetDTypeName(GetDType()), GetDTypeName(type)};
@@ -94,7 +96,7 @@ void Tensor::Backward(std::optional<Tensor> grad_output, [[maybe_unused]]std::op
         return;
     }
     if (!grad_output.has_value()) {
-        grad_output = Ones(GetShape());
+        grad_output = Ones(GetShape(), GetDType());
     }
     auto node = impl_->GetAutogradNode();
     assert(node == impl_->autograd_node_);
@@ -106,6 +108,28 @@ Tensor Tensor::Reshape(const std::vector<size_t>& shape) {
     auto result = op->Forward(*this, shape);
     result.impl_->grad_fn = op;
     return result;
+}
+
+Tensor Tensor::Transpose(int dim0, int dim1) {
+    auto op = std::make_shared<TransposeOperation>();
+    auto result = op->Forward(*this, dim0, dim1);
+    result.impl_->grad_fn = op;
+    return result;
+}
+
+Tensor Tensor::Index(const std::vector<TensorIndex>& indices) const {
+    auto op = std::make_shared<IndexingOperation>();
+    auto result = op->Forward(*this, indices);
+    result.impl_->grad_fn = op;
+    return result;
+}
+
+Tensor& Tensor::IndexPut(const std::vector<TensorIndex>& indices, const Tensor& other) {
+    return IndexingPutImpl(*this, indices, other);
+}
+
+Tensor& Tensor::IndexPut(const std::vector<TensorIndex>& indices, const Scalar& scalar) {
+    return IndexingPutImpl(*this, indices, scalar);
 }
 
 // Tensor class implementation END-----------------------------------------------------

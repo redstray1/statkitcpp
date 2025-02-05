@@ -30,4 +30,33 @@ std::vector<std::shared_ptr<TensorImpl>> ReshapeOperation::GetChildren() {
 }
 
 
+Tensor TransposeOperation::Forward(const Tensor& arg, int dim0, int dim1) {
+    bool requires_grad = arg.GetRequiresGrad();
+    if (requires_grad) {
+        arg_ = arg.GetImpl();
+        dim0_ = dim0;
+        dim1_ = dim1;
+    }
+    auto output = TransposeImpl(arg, dim0, dim1);
+    output.SetRequiresGrad(requires_grad);
+    return output;
+}
+
+std::vector<Tensor> TransposeOperation::Backward(const Tensor& grad_output) {
+    std::vector<Tensor> input_grads(1);
+    if (arg_->GetRequiresGrad()) {
+        auto darg = TransposeImpl(grad_output, dim0_, dim1_);
+        input_grads[0] = darg;
+    }
+    return input_grads;
+}
+
+std::string TransposeOperation::GetName() const {
+    return "TransposeOperation()";
+}
+
+std::vector<std::shared_ptr<TensorImpl>> TransposeOperation::GetChildren() {
+    return {arg_};
+}
+
 }

@@ -1,6 +1,7 @@
 #ifndef AUTOGRAD_OPS_HEADER_H
 #define AUTOGRAD_OPS_HEADER_H
 #include "TensorImpl.h"
+#include "TensorIndex.h"
 #include "autograd.h"
 #include <vector>
 
@@ -227,6 +228,32 @@ public:
     std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
 };
 
+class TransposeOperation : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> arg_;
+    int dim0_;
+    int dim1_;
+public:
+    TransposeOperation() = default;
+    ~TransposeOperation() {}
+    Tensor Forward(const Tensor& arg, int dim0, int dim1);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
+//Indexing operations
+class IndexingOperation : public GradFunction {
+private:
+    std::shared_ptr<TensorImpl> arg_;
+    std::vector<TensorIndex> indices_;
+public:
+    IndexingOperation() = default;
+    ~IndexingOperation() {}
+    Tensor Forward(const Tensor& arg, const std::vector<TensorIndex>& indices);
+    std::vector<Tensor> Backward(const Tensor& grad_output) override;
+    std::string GetName() const override;
+    std::vector<std::shared_ptr<TensorImpl>> GetChildren() override;
+};
 //Linear algebra operations-------------------------------------------------------------------------------
 
 class DotFunction : public GradFunction {

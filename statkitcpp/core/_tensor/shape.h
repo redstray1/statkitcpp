@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "DimMask.h"
+#include "TensorIndex.h"
 #include <string>
 
 bool IsBroadcastable(const std::vector<size_t>& shape1,
@@ -32,5 +33,7 @@ std::vector<size_t> GetMultiIndex(const size_t& flat_index,
                                   size_t size);
 
 DimMask GetMaskOfOnes(const std::vector<size_t>& shape);
+
+std::vector<size_t> GetShapeFromIndexing(const std::vector<statkitcpp::TensorIndex>& indices, const std::vector<size_t>& shape);
 
 #endif

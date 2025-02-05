@@ -225,9 +225,9 @@ def test_basic_hard_case6(t: Case):
 
 def test_linear_layer_case():
     for _ in range(10):
-        X = np.random.random((100, 20)).astype(np.float32)
-        A = np.random.random((20, 50)).astype(np.float32)
-        b = np.random.random((50,)).astype(np.float32)
+        X = np.random.random((100, 20)).astype(np.float64)
+        A = np.random.random((20, 50)).astype(np.float64)
+        b = np.random.random((50,)).astype(np.float64)
 
         X1 = skpp.Tensor(X)
         A1 = skpp.Tensor(A)

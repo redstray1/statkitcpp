@@ -12,6 +12,7 @@
 #include "Scalar.h"
 #include "ScalarType.h"
 #include "TensorImpl.h"
+#include "TensorIndex.h"
 #include "../_autograd/autograd.h"
 #include "tensor_defines.h"
 #include "Storage.h"
@@ -68,6 +69,7 @@ public:
     const std::vector<size_t> GetShape() const { return impl_->GetShape(); };
     void SetShape(const std::vector<size_t>& shape) { *this = Reshape(shape); }
     Tensor Reshape(const std::vector<size_t>& shape);
+    Tensor Transpose(int dim0 = -2, int dim1 = -1);
 
     const std::vector<size_t> GetStrides() const { return impl_->GetStrides(); };
 
@@ -99,6 +101,10 @@ public:
     bool BroadcastableTo(const Tensor& other);
 
     void Backward(std::optional<Tensor> grad_output = std::nullopt, std::optional<Tensor> output = std::nullopt, bool retain_graph=false) &;
+
+    Tensor Index(const std::vector<TensorIndex>& indices) const;
+    Tensor& IndexPut(const std::vector<TensorIndex>& indices, const Tensor& other);
+    Tensor& IndexPut(const std::vector<TensorIndex>& indices, const Scalar& scalar);
 
     TENSOR_AGGREGATION_METHODS(AGGREGATION_DECLARATIONS)
 

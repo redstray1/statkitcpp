@@ -1,7 +1,11 @@
+#pragma once
+
 #include "../ScalarType.h"
 #include "../Scalar.h"
 #include "../shape.h"
 #include "errors.h"
+#include "promote_type.h"
+#include "UFunc.h"
 #include <vector>
 
 namespace statkitcpp {
@@ -80,6 +84,7 @@ void pointwise(void* data, size_t size, ScalarType type, Func func, void* out)  
     }
     #undef DEFINE_DTYPE
 }
+
 }
 
 }

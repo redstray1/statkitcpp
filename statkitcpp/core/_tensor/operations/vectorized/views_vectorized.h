@@ -1,61 +1,116 @@
+#pragma once
+
 #include <immintrin.h>
+#include <xmmintrin.h>
+#include <cstddef>
+#include "errors.h"
 
 namespace statkitcpp {
 
 namespace vec {
 
-inline void transpose4x4_SSE(float *A, float *B, const int lda, const int ldb) { //NOLINT
-    __m128 row1 = _mm_load_ps(&A[0*lda]);
-    __m128 row2 = _mm_load_ps(&A[1*lda]);
-    __m128 row3 = _mm_load_ps(&A[2*lda]);
-    __m128 row4 = _mm_load_ps(&A[3*lda]);
-     _MM_TRANSPOSE4_PS(row1, row2, row3, row4);
-     _mm_store_ps(&B[0*ldb], row1);
-     _mm_store_ps(&B[1*ldb], row2);
-     _mm_store_ps(&B[2*ldb], row3);
-     _mm_store_ps(&B[3*ldb], row4);
-}
 
-void transpose_block_SSE4x4float(float *A, float *B, const int n, const int m, const int lda, const int ldb ,const int block_size) { //NOLINT
-    #pragma omp parallel for
-    for(int i=0; i<n; i+=block_size) {
-        for(int j=0; j<m; j+=block_size) {
-            int max_i2 = i+block_size < n ? i + block_size : n;
-            int max_j2 = j+block_size < m ? j + block_size : m;
-            for(int i2=i; i2<max_i2; i2+=4) {
-                for(int j2=j; j2<max_j2; j2+=4) {
-                    transpose4x4_SSE(&A[i2*lda +j2], &B[j2*ldb + i2], lda, ldb);
-                }
+template <typename T>
+void transpose_4pack(T* src, T* dest, const size_t& n, const size_t& m) { //NOLINT
+    size_t const max_i = (n / 4) * 4;
+    size_t const max_j = (m / 4) * 4;
+
+    __m128 r0, r1, r2, r3;
+
+    for (size_t i = 0; i != max_i; i += 4) {
+        for (size_t j = 0; j != max_j; j += 4) {
+            r0 = _mm_loadu_ps(reinterpret_cast<float*>(src + i * m + j));
+            r1 = _mm_loadu_ps(reinterpret_cast<float*>(src + (i + 1) * m + j));
+            r2 = _mm_loadu_ps(reinterpret_cast<float*>(src + (i + 2) * m + j));
+            r3 = _mm_loadu_ps(reinterpret_cast<float*>(src + (i + 3) * m + j));
+
+            _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
+
+            _mm_storeu_ps(reinterpret_cast<float*>(dest + j * n + i),r0);
+            _mm_storeu_ps(reinterpret_cast<float*>(dest + (j + 1) * n + i),r1);
+            _mm_storeu_ps(reinterpret_cast<float*>(dest + (j + 2) * n + i),r2);
+            _mm_storeu_ps(reinterpret_cast<float*>(dest + (j + 3) * n + i),r3);
+        }
+        for (size_t k = i; k != n; ++k) {
+            for (size_t j = max_j; j != m; ++j) {
+                dest[j * n + i] = src[k * m + j];
             }
         }
     }
-}
-
-template <typename T>
-inline void transpose_scalar_block(T *A, T *B, const int lda, const int ldb, const int block_size) { //NOLINT
-    #pragma omp parallel for
-    for(int i=0; i<block_size; i++) {
-        for(int j=0; j<block_size; j++) {
-            B[j*ldb + i] = A[i*lda +j];
-        }
-    }
-}
-template <typename T>
-inline void transpose_block(T *A, T *B, const int n, const int m, const int lda, const int ldb, const int block_size) {//NOLINT
-    #pragma omp parallel for
-    for(int i=0; i<n; i+=block_size) {
-        for(int j=0; j<m; j+=block_size) {
-            transpose_scalar_block(&A[i*lda +j], &B[j*ldb + i], lda, ldb, block_size);
+    for (size_t i = max_i; i != n; ++i) {
+        for (size_t j = 0; j != m; ++j) {
+            dest[j * n + i] = src[i * m + j];
         }
     }
 }
 
 template <typename T>
-void transpose(T* src, T* dest, const int& n, const int& m) { //NOLINT
-    #define ROUND_UP(x, s) (((x)+((s)-1)) & -(s))
-    int lda = ROUND_UP(m, 16);
-    int ldb = ROUND_UP(n, 16);
-    transpose_block(src, dest, n, m, lda, ldb, 64);
+void transpose_2pack(T* src, T* dest, const size_t& n, const size_t& m) { //NOLINT
+    size_t const max_i = (n / 2) * 2;
+    size_t const max_j = (m / 2) * 2;
+
+    __m128d r0, r1;
+
+    if (max_j != m) {
+        for (size_t i = 0; i < max_i; i += 2) {
+            for (size_t j = 0; j < max_j; j += 2) {
+                r0 = _mm_loadu_pd(reinterpret_cast<double*>(src + i * m + j));
+                r1 = _mm_loadu_pd(reinterpret_cast<double*>(src + (i + 1) * m + j));
+
+                _mm_storeu_pd(reinterpret_cast<double*>(dest + j * n + i), _mm_shuffle_pd(r0, r1, 0b00));
+                _mm_storeu_pd(reinterpret_cast<double*>(dest + (j + 1) * n + i), _mm_shuffle_pd(r0, r1, 0b11));
+            }
+            for (size_t k = i; k != n; ++k) {
+                for (size_t j = max_j; j != m; ++j) {
+                    dest[j * n + i] = src[k * m + j];
+                }
+            }
+        }
+        for (size_t i = max_i; i != n; ++i) {
+            for (size_t j = 0; j != m; ++j) {
+                dest[j * n + i] = src[i * m + j];
+            }
+        }
+    } else {
+        for (size_t i = 0; i < max_i; i += 2) {
+            for (size_t j = 0; j < max_j; j += 2) {
+                r0 = _mm_loadu_pd(reinterpret_cast<double*>(src + i * m + j));
+                r1 = _mm_loadu_pd(reinterpret_cast<double*>(src + (i + 1) * m + j));
+
+                _mm_storeu_pd(reinterpret_cast<double*>(dest + j * n + i), _mm_shuffle_pd(r0, r1, 0b00));
+                _mm_storeu_pd(reinterpret_cast<double*>(dest + (j + 1) * n + i), _mm_shuffle_pd(r0, r1, 0b11));
+            }
+            for (size_t k = i; k != n; ++k) {
+                for (size_t j = max_j; j != m; ++j) {
+                    dest[j * n + i] = src[k * m + j];
+                }
+            }
+        }
+        if (max_i != n) {
+            for (size_t j = 0; j < m; j++) {
+                dest[j * n + max_i] = src[max_i * m + j];
+            }
+         }
+    }
+}
+
+template <typename T>
+void transpose(T* src, T* dest, const size_t& n, const size_t& m) { //NOLINT
+    constexpr size_t kDataSize = sizeof(T);
+    if constexpr (4 == kDataSize) {
+        transpose_4pack(src, dest, n, m);
+    } else if constexpr (8 == kDataSize) {
+        transpose_2pack(src, dest, n, m);
+    } else {
+        throw NotImplemetedError{"Transpose not implemeted for types other than float and double"};
+    }
+}
+
+template <typename T>
+void batched_transpose(T* src, T* dest, const size_t& n, const size_t& m, const size_t& outsize) { //NOLINT
+    for (size_t i = 0; i < outsize; i += n * m, src += n * m, dest += n * m) {
+        transpose(src, dest, n, m);
+    }
 }
 
 }

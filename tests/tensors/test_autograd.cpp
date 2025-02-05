@@ -54,6 +54,14 @@ TEST_CASE("Simple autograd") {
         auto b = a.Max(-1);
         b.Backward(std::nullopt, std::nullopt, true);
     }
+    {
+        Tensor a = Ones({1, 3, 2});
+        Tensor c = Full({1}, 2);
+        a.SetRequiresGrad(true);
+        auto b = a * c;
+        b.Backward();
+        // std::cout << (a.GetGrad()).ToString();
+    }
 }
 
 TEST_CASE("Complex autograd") {

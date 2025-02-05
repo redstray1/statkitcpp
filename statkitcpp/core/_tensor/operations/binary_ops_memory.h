@@ -4,38 +4,13 @@
 #include <cstdint>
 #include <cstddef>
 #include "ScalarType.h"
+#include "promote_type.h"
 #include "TensorIterator.h"
 #include "Array.h"
 #include <chrono>
 #include <iostream>
 
 namespace statkitcpp {
-
-constexpr auto kI1 = ScalarType::Char;
-constexpr auto kI2 = ScalarType::Short;
-constexpr auto kI4 = ScalarType::Int;
-constexpr auto kI8 = ScalarType::Long;
-constexpr auto kF4 = ScalarType::Float;
-constexpr auto kF8 = ScalarType::Double;
-constexpr auto kB1 = ScalarType::Bool;
-
-constexpr auto kIndex2dtype = ArrayOf<
-    ScalarType>(kI1, kI2, kI4, kI8, kF4, kF8, kB1);
-
-constexpr std::array<int64_t, static_cast<size_t>(ScalarType::NumOptions)>
-CalcDType2Index() {
-    std::array<int64_t, static_cast<size_t>(ScalarType::NumOptions)> inverse = {};
-    for (int64_t i = 0; i < static_cast<int64_t>(ScalarType::NumOptions); i++) {
-        inverse[i] = -1;
-    }
-    for (int64_t i = 0; i < static_cast<int64_t>(kIndex2dtype.size()); i++) {
-        inverse[static_cast<int64_t>(kIndex2dtype[i])] = i;
-    }
-    return inverse;
-}
-
-constexpr auto kDType2Index = CalcDType2Index();
-
 namespace ops {
 
 #define DEFINE_BINARY2(type1, type2, out_type) \
@@ -57,9 +32,9 @@ void type1##_##type2##_binary_op(TensorIteratorPair& iter, /*NOLINT*/  \
 
 #define DEFINE_BINARY(type1, type2, out_type) \
 template <typename Func> \
-void type1##_##type2##_binary_op(void*& data1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, const size_t& outsize, /*NOLINT*/ \
-                 void*& data2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2, \
-                 void*& out, const std::vector<size_t>& out_strides, const Func& func) { \
+void type1##_##type2##_binary_op(void* data1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, const size_t& outsize, /*NOLINT*/ \
+                 void* data2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2, \
+                 void* out, const std::vector<size_t>& out_strides, const Func& func) { \
     type1* data1_t = static_cast<type1*>(data1); \
     type2* data2_t = static_cast<type2*>(data2); \
     out_type* out_t = static_cast<out_type*>(out); \
@@ -73,7 +48,7 @@ void type1##_##type2##_binary_op(void*& data1, const std::vector<size_t>& shape1
         int rhs_dim = (static_cast<int>(strides2.size()) - out_strides.size()); \
         int dim = 0; \
         if (lhs_dim < 0) { \
-            for (; dim < -lhs_dim; ++dim, ++lhs_dim, ++rhs_dim) { \
+            for (; dim < static_cast<int>(out_strides.size() - strides1.size()); ++dim, ++lhs_dim, ++rhs_dim) { \
                 size_t out_idx = temp_output_idx / out_strides[dim]; \
                 temp_output_idx -= out_idx * out_strides[dim]; \
                 size_t rhs_dim_idx = out_idx; \
@@ -83,7 +58,7 @@ void type1##_##type2##_binary_op(void*& data1, const std::vector<size_t>& shape1
                 rhs_ptr +=rhs_dim_idx * strides2[rhs_dim]; \
             } \
         } else { \
-            for (; dim < -rhs_dim; ++dim, ++lhs_dim, ++rhs_dim) { \
+            for (; dim < static_cast<int>(out_strides.size() - strides2.size()); ++dim, ++lhs_dim, ++rhs_dim) { \
                 size_t out_idx = temp_output_idx / out_strides[dim]; \
                 temp_output_idx -= out_idx * out_strides[dim]; \
                 size_t lhs_dim_idx = out_idx; \
@@ -169,21 +144,12 @@ void type1##_##type2##_binary_op(void*& data1, const std::vector<size_t>& shape1
 
 DEFINE_TYPES_OF_BINARY_ARGS(DEFINE_BINARY)
 
-// template <typename Func>
-// void binary_op(TensorIteratorPair& iter, ScalarType dtype1, ScalarType dtype2, //NOLINT
-//                void* out, const Func& func) {
-//     DEFINE_FUNC_ARRAY(binary_op, binary_op<Func>, TensorIteratorPair&, void*, const Func&)
-//     auto idx1 = kDType2Index[static_cast<int64_t>(dtype1)];
-//     auto idx2 = kDType2Index[static_cast<int64_t>(dtype2)];
-//     kFuncsLookup[idx1][idx2](iter, out, func);
-// }
-
 template <typename Func>
 void binary_op(void* data1, ScalarType dtype1, const std::vector<size_t>& shape1, const std::vector<size_t>& strides1, const size_t& outsize, //NOLINT
                void* data2, ScalarType dtype2, const std::vector<size_t>& shape2, const std::vector<size_t>& strides2,
                void* out, [[maybe_unused]]ScalarType dtype, const std::vector<size_t>& out_strides, const Func& func) {
-    DEFINE_FUNC_ARRAY(binary_op, binary_op<Func>, void*&, const std::vector<size_t>&, const std::vector<size_t>&, const size_t&,
-                      void*&, const std::vector<size_t>&, const std::vector<size_t>&, void*&, const std::vector<size_t>&, const Func&)
+    DEFINE_FUNC_ARRAY(binary_op, binary_op<Func>, void*, const std::vector<size_t>&, const std::vector<size_t>&, const size_t&,
+                      void*, const std::vector<size_t>&, const std::vector<size_t>&, void*, const std::vector<size_t>&, const Func&)
     auto idx1 = kDType2Index[static_cast<int64_t>(dtype1)];
     auto idx2 = kDType2Index[static_cast<int64_t>(dtype2)];
     kFuncsLookup[idx1][idx2](data1, shape1, strides1, outsize,

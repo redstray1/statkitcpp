@@ -3,7 +3,10 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <cstdint>
+#include <optional>
+#include <stdexcept>
 #include "./ScalarType.h"
+#include "cpy_casts.h"
 #include "Scalar.h"
 #include "core/datatypes.h"
 #include "core/dispatcher/tensor_dispatcher.h"
@@ -18,7 +21,7 @@ namespace py = pybind11;
 
 namespace statkitcpp {
 
-void DeclareTensor(py::module& module) {
+inline void DeclareTensor(py::module& module) {
     py::class_<TensorDispatcher> cls(module, "Tensor", py::buffer_protocol());
     cls.def(py::init<>());
     cls.def(py::init<std::vector<size_t>, ScalarType, bool>(), py::kw_only(), py::arg("shape"), py::arg("dtype") = ScalarType::Float, py::arg("requires_grad") = true);
@@ -51,6 +54,13 @@ void DeclareTensor(py::module& module) {
 
     //Tensor operations
     cls.def("reshape", &TensorDispatcher::Reshape, py::arg("shape"));
+    cls.def("transpose", &TensorDispatcher::Transpose, py::arg("dim0") = -2, py::arg("dim1") = -1);
+    cls.def_property_readonly("T", &TensorDispatcher::FastTranspose);
+
+    //Indexing operations
+    cls.def("__getitem__", &TensorDispatcher::Index, py::arg("key"));
+    cls.def("__setitem__", py::overload_cast<py::object, const TensorDispatcher&>(&TensorDispatcher::IndexPut), py::arg("key"), py::arg("other"));
+    cls.def("__setitem__", py::overload_cast<py::object, const Scalar&>(&TensorDispatcher::IndexPut), py::arg("key"), py::arg("other"));
 
     //Backward method
     cls.def("backward", &TensorDispatcher::Backward, py::arg("grad_output") = py::none(), py::arg("output") = py::none(), py::arg("retain_graph") = false);
@@ -86,7 +96,7 @@ void DeclareTensor(py::module& module) {
     module.def("full", &FullPy, py::arg("shape"), py::arg("value"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
     module.def("zeros", &ZerosPy, py::arg("shape"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
     module.def("ones", &OnesPy, py::arg("shape"),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
-    module.def("arange", &ArangePy, py::arg("start"), py::arg("end"), py::arg("step") = Scalar(1),py::kw_only(),  py::arg("dtype") = ScalarType::Float);
+    module.def("arange", &ArangePy, py::arg("start"), py::arg("end"), py::arg("step") = 1,py::kw_only(),  py::arg("dtype") = ScalarType::Float);
 }
 
 PYBIND11_MODULE(_statkitcpp, m) {
@@ -94,8 +104,8 @@ PYBIND11_MODULE(_statkitcpp, m) {
         C++ library with various statistical algorithms with Python integration
     )pbdoc";
 
-    py::enum_<ScalarType>(m, "ScalarType")
-        .value("int8", kInt8)
+    py::enum_<ScalarType> scalar_type(m, "ScalarType");
+        scalar_type.value("int8", kInt8)
         .value("int16", kInt16)
         .value("int32", kInt32)
         .value("int64", kInt64)
@@ -116,6 +126,11 @@ PYBIND11_MODULE(_statkitcpp, m) {
     SCALAR_TYPES(SCALAR_IMPLICIT_CONVERT)
     #undef SCALAR_IMPLICIT_CONVERT
 
+    py::class_<Slice> slice(m, "Slice");
+    slice.def(py::init<size_t, size_t, size_t>());
+    slice.def(py::init<size_t>());
+    slice.def(py::init(&ParseSlice));
+    py::implicitly_convertible<py::slice, Slice>();
     // DeclareTensorClass<float>(m, "32");
     // DeclareTensorClass<double>(m, "64");
     DeclareTensor(m);

@@ -3,6 +3,7 @@
 #include "../Tensor.h"
 #include "ScalarType.h"
 #include "config.h"
+#include "TensorIndex.h"
 
 namespace statkitcpp {
 
@@ -79,4 +80,10 @@ Tensor SqrtDerivImpl(const Tensor& arg);
 Tensor ReshapeImpl(const Tensor& arg, const std::vector<size_t>& shape);
 Tensor UnsqueezeImpl(const Tensor& arg, int dim);
 Tensor SqueezeImpl(const Tensor& arg, int dim);
+Tensor TransposeImpl(const Tensor& arg, int dim0 = -2, int dim1 = -1);
+
+//Indexing operations
+Tensor IndexingImpl(const Tensor& arg, const std::vector<TensorIndex>& indices);
+Tensor& IndexingPutImpl(Tensor& arg, const std::vector<TensorIndex>& indices, const Tensor& other);
+Tensor& IndexingPutImpl(Tensor& arg, const std::vector<TensorIndex>& indices, const Scalar& other);
 }

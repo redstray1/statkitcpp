@@ -7,11 +7,14 @@
 #include <iterator>
 #include <optional>
 #include <memory>
+#include <stdexcept>
 #include "../_tensor/shape.h"
 #include "../_tensor/ScalarType.h"
+#include "TensorIndex.h"
 #include "dispatcher_defines.h"
 #include "../_tensor/Tensor.h"
 #include "../errors.h"
+#include "cpy_casts.h"
 
 namespace py = pybind11;
 
@@ -58,6 +61,9 @@ public:
     std::vector<size_t> GetShape() const;
     void SetShape(const std::vector<size_t>& shape);
     TensorDispatcher Reshape(const std::vector<size_t>& shape);
+    TensorDispatcher Transpose(int dim0, int dim1);
+    TensorDispatcher FastTranspose();
+    TensorDispatcher Index_(const std::vector<TensorIndex>& indices) const; //NOLINT
 
     std::vector<size_t> GetStrides() const;
 
@@ -74,6 +80,10 @@ public:
     ScalarType GetDType() const;
     size_t GetItemSize() const;
     size_t GetNBytes() const;
+
+    TensorDispatcher Index(py::object indices) const;
+    TensorDispatcher& IndexPut(py::object indices, const TensorDispatcher& other);
+    TensorDispatcher& IndexPut(py::object indices, const Scalar& other);
 
     TENSOR_AGGREGATION_METHODS(DISPATCHER_AGGREGATION_DECLARATIONS)
 
@@ -162,6 +172,54 @@ TensorDispatcher TensorDispatcher::Reshape(const std::vector<size_t>& shape) {
     auto var_ptr = tensor_.Reshape(shape);
     return TensorDispatcher(var_ptr);
 } 
+
+TensorDispatcher TensorDispatcher::Transpose(int dim0, int dim1) {
+    auto var_ptr = tensor_.Transpose(dim0, dim1);
+    return TensorDispatcher(var_ptr);
+} 
+
+TensorDispatcher TensorDispatcher::FastTranspose() {
+    auto var_ptr = tensor_.Transpose(-2, -1);
+    return TensorDispatcher(var_ptr);
+}
+
+TensorDispatcher TensorDispatcher::Index_(const std::vector<TensorIndex>& indices) const { //NOLINT
+    return tensor_.Index(indices);
+}
+
+std::vector<TensorIndex> ConvertIndex(py::object indices) {
+    if (py::isinstance<py::tuple>(indices)) {
+        auto tuple_idxs = indices.cast<py::tuple>();
+        std::vector<TensorIndex> inds(tuple_idxs.size());
+        for (size_t i = 0; i < tuple_idxs.size(); i++) {
+            if (py::isinstance<py::int_>(tuple_idxs[i])) {
+                inds[i] = tuple_idxs[i].cast<int>();
+            } else if (py::isinstance<py::slice>(tuple_idxs[i])) {
+                inds[i] = ParseSlice(tuple_idxs[i].cast<py::slice>());
+            }
+        }
+        return inds;
+    } else if (py::isinstance<py::int_>(indices)) {
+        return {indices.cast<int>()};
+    } else if (py::isinstance<py::slice>(indices)) {
+        return {ParseSlice(indices.cast<py::slice>())};
+    }
+    throw std::invalid_argument{"Some strange indices type in indexing"};
+}
+
+TensorDispatcher TensorDispatcher::Index(py::object indices) const {
+    return Index_(ConvertIndex(indices));
+}
+
+TensorDispatcher& TensorDispatcher::IndexPut(py::object indices, const TensorDispatcher& other) {
+    tensor_.IndexPut(ConvertIndex(indices), other.tensor_);
+    return *this;
+}
+
+TensorDispatcher& TensorDispatcher::IndexPut(py::object indices, const Scalar& other) {
+    tensor_.IndexPut(ConvertIndex(indices), other);
+    return *this;
+}
 
 std::vector<size_t> TensorDispatcher::GetStrides() const {
     return tensor_.GetStrides();
